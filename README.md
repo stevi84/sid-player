@@ -4,31 +4,31 @@ A modern parser and player for C64 SID files using the Web Audio API.
 
 ## Overview
 
-This SID-Player is a modern reimplementation of the classic C64 music format in TypeScript. It uses the Web Audio API to reproduce the sound of the C64 SID chip. Like the original player it displays the played notes in real-time on a virtual piano keyboard. A selection of songs can be selected from a drop down menu. Additionally files can be selected from the local drive (e.g. from [Compute's Gazette Sid Collection](https://www.c64music.co.uk/)).
+This SID-Player is a modern reimplementation of the classic Sidplayer by Craig Chamberlain in TypeScript. It uses the Web Audio API to reproduce the sound of the C64 SID chip. Like the original player it displays the played notes in real-time on a virtual piano keyboard. A number of songs can be selected from a drop down menu. Additionally files can be selected from the local drive (e.g. downloaded from [Compute's Gazette Sid Collection](https://www.c64music.co.uk/)).
 
 ### Key Features
 
-- Supports all features of the original sid player
+- Supports all features of the original Sidplayer
 - Implementation of core SID chip functionalities
 - Pure TypeScript implementation without external dependencies
 
 ## Live Demo
 
-A live version of the player is available at:
+A live version of the player is available here:
 https://stevi84.github.io/sidplayer/
 
 ## Technical Details
 
 ### Web Audio API Integration
 
-The player utilizes the Web Audio API for audio processing. The following diagram shows the structure of the audio network:
+The player uses the Web Audio API for audio processing. The following diagram shows the structure of the audio network:
 
 ![Web Audio Api Network](C64Sid.png)
 
 ### Known Limitations
 
 - Frame drops
-- Advanced SID Player features not yet implemented
+- Advanced Sidplayer features not yet implemented
 - Waveforms were intendedly not exactly copied from the C64
 
 ## Installation and Usage
@@ -49,8 +49,7 @@ For further information about the Sidplayer and C64 SID technology:
 - [The SID Homepage](http://www.sidmusic.org/sid/)
 - [C64 SID CHIP MOS6581](http://www.dopeconnection.net/C64_SID.htm)
 - [Technical SID Information/Software Stuff](http://www.sidmusic.org/sid/sidtech2.html)
-- MUS file format
-https://www.c64music.co.uk/CGSC_v146.7z -> /CGSC/00_Documents/MUS_format_A.txt & MUS_format_B.txt
+- MUS file format: https://www.c64music.co.uk/CGSC_v146.7z -> /CGSC/00_Documents/MUS_format_A.txt & MUS_format_B.txt
 
 ### Songs
 - [Compute's Gazette Sid Collection](https://www.c64music.co.uk/)
