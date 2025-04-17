@@ -1,0 +1,206 @@
+@startuml Sid
+
+title C64Sid
+
+package Sid {
+  package Voice1 {
+    package TriangleOscillator as Voice1TriangleOscillator {
+      [ScriptProcessor] as Voice1TriangleScriptProcessor #LightGreen
+      [_gain\nGainNode\non/off] as Voice1TriangleGainNode
+
+      Voice1TriangleScriptProcessor --> Voice1TriangleGainNode
+    }
+
+    package SawtoothOscillator as Voice1SawtoothOscillator {
+      [ScriptProcessor] as Voice1SawtoothScriptProcessor #LightGreen
+      [_gain\nGainNode\non/off] as Voice1SawtoothGainNode
+
+      Voice1SawtoothScriptProcessor --> Voice1SawtoothGainNode
+    }
+
+    package PulseOscillator as Voice1PulseOscillator {
+      [ScriptProcessor] as Voice1PulseScriptProcessor #LightGreen
+      [_gain\nGainNode\non/off] as Voice1PulseGainNode
+
+      Voice1PulseScriptProcessor --> Voice1PulseGainNode
+    }
+
+    package NoiseOscillator as Voice1NoiseOscillator {
+      [ScriptProcessor] as Voice1NoiseScriptProcessor #LightGreen
+      [_gain\nGainNode\non/off] as Voice1NoiseGainNode
+
+      Voice1NoiseScriptProcessor --> Voice1NoiseGainNode
+    }
+
+    [_adsrGain\nGainNode\nEnvelope] as Voice1AdsrGain #LightGoldenRodYellow
+
+    Voice1TriangleGainNode --> Voice1AdsrGain
+    Voice1SawtoothGainNode --> Voice1AdsrGain
+    Voice1PulseGainNode --> Voice1AdsrGain
+    Voice1NoiseGainNode --> Voice1AdsrGain
+  }
+
+  package Voice2 {
+    package TriangleOscillator as Voice2TriangleOscillator {
+      [ScriptProcessor] as Voice2TriangleScriptProcessor #LightGreen
+      [_gain\nGainNode\non/off] as Voice2TriangleGainNode
+
+      Voice2TriangleScriptProcessor --> Voice2TriangleGainNode
+    }
+
+    package SawtoothOscillator as Voice2SawtoothOscillator {
+      [ScriptProcessor] as Voice2SawtoothScriptProcessor #LightGreen
+      [_gain\nGainNode\non/off] as Voice2SawtoothGainNode
+
+      Voice2SawtoothScriptProcessor --> Voice2SawtoothGainNode
+    }
+
+    package PulseOscillator as Voice2PulseOscillator {
+      [ScriptProcessor] as Voice2PulseScriptProcessor #LightGreen
+      [_gain\nGainNode\non/off] as Voice2PulseGainNode
+
+      Voice2PulseScriptProcessor --> Voice2PulseGainNode
+    }
+
+    package NoiseOscillator as Voice2NoiseOscillator {
+      [ScriptProcessor] as Voice2NoiseScriptProcessor #LightGreen
+      [_gain\nGainNode\non/off] as Voice2NoiseGainNode
+
+      Voice2NoiseScriptProcessor --> Voice2NoiseGainNode
+    }
+
+    [_adsrGain\nGainNode\nEnvelope] as Voice2AdsrGain #LightGoldenRodYellow
+
+    Voice2TriangleGainNode --> Voice2AdsrGain
+    Voice2SawtoothGainNode --> Voice2AdsrGain
+    Voice2PulseGainNode --> Voice2AdsrGain
+    Voice2NoiseGainNode --> Voice2AdsrGain
+  }
+
+  package Voice3 {
+    package TriangleOscillator as Voice3TriangleOscillator {
+      [ScriptProcessor] as Voice3TriangleScriptProcessor #LightGreen
+      [_gain\nGainNode\non/off] as Voice3TriangleGainNode
+
+      Voice3TriangleScriptProcessor --> Voice3TriangleGainNode
+    }
+
+    package SawtoothOscillator as Voice3SawtoothOscillator {
+      [ScriptProcessor] as Voice3SawtoothScriptProcessor #LightGreen
+      [_gain\nGainNode\non/off] as Voice3SawtoothGainNode
+
+      Voice3SawtoothScriptProcessor --> Voice3SawtoothGainNode
+    }
+
+    package PulseOscillator as Voice3PulseOscillator {
+      [ScriptProcessor] as Voice3PulseScriptProcessor #LightGreen
+      [_gain\nGainNode\non/off] as Voice3PulseGainNode
+
+      Voice3PulseScriptProcessor --> Voice3PulseGainNode
+    }
+
+    package NoiseOscillator as Voice3NoiseOscillator {
+      [ScriptProcessor] as Voice3NoiseScriptProcessor #LightGreen
+      [_gain\nGainNode\non/off] as Voice3NoiseGainNode
+
+      Voice3NoiseScriptProcessor --> Voice3NoiseGainNode
+    }
+
+    [_adsrGain\nGainNode\nEnvelope] as Voice3AdsrGain #LightGoldenRodYellow
+
+    Voice3TriangleGainNode --> Voice3AdsrGain
+    Voice3SawtoothGainNode --> Voice3AdsrGain
+    Voice3PulseGainNode --> Voice3AdsrGain
+    Voice3NoiseGainNode --> Voice3AdsrGain
+  }
+
+  package Filter {
+    [_inNode\nGainNode] as FilterInNode #LightGoldenRodYellow
+    [_lowPass\nBiquadFilterNode\nLowpass filter] as FilterLowPass #LightGreen
+    [_highPass\nBiquadFilterNode\nHighpass filter] as FilterHighPass #LightGreen
+    together {
+      [_bandPass\nBiquadFilterNode\nBandpass filter] as FilterBandPass #LightGreen
+      [_bandPassPeak\nBiquadFilterNode\nBandpass resonance] as FilterBandPassPeak #LightGreen
+    }
+    [_outNode\nGainNode] as FilterOutNode #LightGoldenRodYellow
+
+    [_in_out\nGainNode\non/off] as FilterInOut
+    together {
+      [_in_low\nGainNode\non/off] as FilterInLow
+      [_in_band\nGainNode\non/off] as FilterInBand
+      [_in_high\nGainNode\non/off] as FilterInHigh
+    }
+    [_low_band\nGainNode\non/off] as FilterLowBand
+    [_low_high\nGainNode\non/off] as FilterLowHigh
+    [_band_high\nGainNode\non/off] as FilterBandHigh
+    together {
+      [_low_out\nGainNode\non/off] as FilterLowOut
+      [_band_out\nGainNode\non/off] as FilterBandOut
+      [_high_out\nGainNode\non/off] as FilterHighOut
+    }
+
+    FilterInNode --> FilterInOut
+    FilterInOut --> FilterOutNode
+    FilterInNode --> FilterInLow
+    FilterInLow --> FilterLowPass
+    FilterInNode --> FilterInBand
+    FilterInBand --> FilterBandPass
+    FilterBandPass --> FilterBandPassPeak
+    FilterInNode --> FilterInHigh
+    FilterInHigh --> FilterHighPass
+    FilterLowPass -> FilterLowBand
+    FilterLowBand -> FilterBandPass
+    FilterLowPass -> FilterLowHigh
+    FilterLowHigh -> FilterHighPass
+    FilterBandPassPeak -> FilterBandHigh
+    FilterBandHigh -> FilterHighPass
+    FilterLowPass --> FilterLowOut
+    FilterLowOut --> FilterOutNode
+    FilterBandPassPeak --> FilterBandOut
+    FilterBandOut --> FilterOutNode
+    FilterHighPass --> FilterHighOut
+    FilterHighOut --> FilterOutNode
+  }
+
+  [_mainGain\nGainNode\nVolume] as SidMainGain #LightGoldenRodYellow
+  together {
+    [_v1_gain\nGainNode\n1/3] as SidV1Gain #LightGoldenRodYellow
+    [_v2_gain\nGainNode\n1/3] as SidV2Gain #LightGoldenRodYellow
+    [_v3_gain\nGainNode\n1/3] as SidV3Gain #LightGoldenRodYellow
+  }
+  together {
+    [_v1_filter\nGainNode\non/off] as SidV1Filter
+    [_v2_filter\nGainNode\non/off] as SidV2Filter
+    [_v3_filter\nGainNode\non/off] as SidV3Filter
+  }
+  [_v3_switch\nGainNode\non/off] as SidV3Switch
+  together {
+    [_v1_main\nGainNode\non/off] as SidV1Main
+    [_v2_main\nGainNode\non/off] as SidV2Main
+    [_v3_main\nGainNode\non/off] as SidV3Main
+  }
+
+  Voice1AdsrGain --> SidV1Gain
+  SidV1Gain --> SidV1Filter
+  SidV1Filter --> FilterInNode
+  SidV1Gain --> SidV1Main
+  SidV1Main --> SidMainGain
+  Voice2AdsrGain --> SidV2Gain
+  SidV2Gain --> SidV2Filter
+  SidV2Filter --> FilterInNode
+  SidV2Gain --> SidV2Main
+  SidV2Main --> SidMainGain
+  Voice3AdsrGain --> SidV3Switch
+  SidV3Switch -> SidV3Gain
+  SidV3Gain --> SidV3Filter
+  SidV3Filter --> FilterInNode
+  SidV3Gain --> SidV3Main
+  SidV3Main --> SidMainGain
+  FilterOutNode --> SidMainGain
+}
+
+[audioContext.destination] as Destination #LightPink
+
+SidMainGain --> Destination
+
+@enduml

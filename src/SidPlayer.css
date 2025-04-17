@@ -1,0 +1,146 @@
+body {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  background-color: #f4f4f8;
+  color: #222;
+  font-family: 'Segoe UI', sans-serif;
+}
+.center-screen {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+}
+.content {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 20px 0;
+}
+.piano {
+  width: 840px;
+}
+.first {
+  position: absolute;
+  top: 20;
+}
+.second {
+  position: absolute;
+  top: 220px;
+}
+.white {
+  position: absolute;
+  display: flex;
+}
+.black {
+  position: absolute;
+  left: 20px;
+  display: flex;
+  gap: 10px;
+}
+.white-key {
+  width: 30px;
+  height: 150px;
+  background: linear-gradient(to bottom, #fff, #e0e0e0);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  border: 1px solid black;
+  box-sizing: border-box;
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
+}
+.black-key {
+  width: 20px;
+  height: 100px;
+  background: linear-gradient(to bottom, #222, #000);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  z-index: 1;
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
+}
+.invisible-key {
+  width: 20px;
+  height: 100px;
+}
+.bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: auto;
+  gap: 10px;
+}
+.text {
+  position: relative;
+  margin-top: 380px;
+  text-align: center;
+  height: 100px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 12px;
+  padding: 12px 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+  p {
+    margin: 0;
+    line-height: 1.5;
+  }
+}
+.control {
+  position: relative;
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 12px;
+  padding: 12px 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+#fileSelect {
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background: white;
+  font-size: 1em;
+}
+/* https://css-tricks.com/making-pure-css-playpause-button/ */
+.playPauseButton {
+  border: 0;
+  background: transparent;
+  box-sizing: border-box;
+  width: 0;
+  height: 20px;
+  vertical-align: middle;
+  border-color: transparent transparent transparent #202020;
+  transition: 100ms all ease;
+  cursor: pointer;
+
+  /* play state */
+  border-style: solid;
+  border-width: 10px 0 10px 16px;
+
+  &.paused {
+    border-style: double;
+    border-width: 0px 0 0px 16px;
+  }
+
+  &:hover {
+    border-color: transparent transparent transparent #404040;
+  }
+
+  &:disabled {
+    border-color: transparent transparent transparent #808080;
+  }
+}
+.slider {
+  vertical-align: middle;
+}
