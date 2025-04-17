@@ -9,6 +9,15 @@ body {
   color: #222;
   font-family: 'Segoe UI', sans-serif;
 }
+#unsupported-message {
+  display: none;
+  border: 1px solid #c00;
+  padding: 2em;
+  max-width: 600px;
+  margin: 5em auto;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
 .center-screen {
   width: 100%;
   display: flex;

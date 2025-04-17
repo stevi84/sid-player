@@ -3,12 +3,20 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
     <title>SidPlayer</title>
     <link href="SidPlayer.css" rel="stylesheet" />
   </head>
   <body>
-    <div class="center-screen">
+    <div id="unsupported-message">
+      <h1>Your browser is not supported</h1>
+      <p>This website requires full Web Audio API support, including <code>cancelAndHoldAtTime</code>.</p>
+      <p>
+        Please use a different browser such as modern <strong>Chrome</strong>, <strong>Edge</strong> or
+        <strong>Safari</strong>.
+      </p>
+    </div>
+    <div id="main-content" class="center-screen">
       <div class="content">
         <div class="piano">
           <div class="first">

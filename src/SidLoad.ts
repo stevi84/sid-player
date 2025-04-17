@@ -15,6 +15,19 @@ import { currentNotes, lastNotes, notes } from './SidPlayer';
 
 export const audioContext = new AudioContext();
 await audioContext.suspend();
+
+// check for cancelAndHoldAtTime, not implemented in Mozilla Firefox
+try {
+  const testGain = audioContext.createGain();
+  if (typeof testGain.gain.cancelAndHoldAtTime !== 'function')
+    throw new Error('Unsupported browser: cancelAndHoldAtTime not available.');
+} catch (e) {
+  console.error('Error during feature detection:', e);
+  document.getElementById('main-content')!.style.display = 'none';
+  document.getElementById('unsupported-message')!.style.display = 'block';
+  throw e;
+}
+
 const Sid = new SidClass(audioContext);
 
 const calcFrequency = (
