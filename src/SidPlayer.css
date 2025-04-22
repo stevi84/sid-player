@@ -1,10 +1,10 @@
+html {
+  height: 100%;
+}
 body {
   margin: 0;
-  padding: 0;
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: stretch;
+  padding: 10px;
+  height: calc(100% - 20px);
   background-color: #f4f4f8;
   color: #222;
   font-family: 'Segoe UI', sans-serif;
@@ -18,44 +18,56 @@ body {
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
-.center-screen {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: stretch;
-}
 .content {
   display: flex;
   flex-direction: column;
+  gap: 10px;
   justify-content: space-between;
   align-items: center;
-  width: 100%;
-  padding: 20px 0;
+  height: 100%;
 }
 .piano {
-  width: 840px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 0;
 }
-.first {
-  position: absolute;
-  top: 20;
-}
-.second {
-  position: absolute;
-  top: 220px;
+.octave {
+  position: relative;
+  @media (orientation: landscape) {
+    width: 15vw;
+    min-width: 190px;
+    max-width: 230px;
+    height: 30vh;
+    min-height: 130px;
+    max-height: 170px;
+  }
+  @media (orientation: portrait) {
+    width: 15vw;
+    min-width: 150px;
+    max-width: 230px;
+    height: 13vh;
+    min-height: 80px;
+    max-height: 170px;
+  }
 }
 .white {
   position: absolute;
+  height: 100%;
+  width: 100%;
   display: flex;
 }
 .black {
   position: absolute;
-  left: 20px;
+  height: 100%;
+  width: 100%;
+  left: -5%;
   display: flex;
-  gap: 10px;
+  gap: 3.5%;
 }
 .white-key {
-  width: 30px;
-  height: 150px;
+  width: calc(100% / 7);
+  height: 100%;
   background: linear-gradient(to bottom, #fff, #e0e0e0);
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
   border: 1px solid black;
@@ -64,30 +76,20 @@ body {
   border-bottom-right-radius: 5px;
 }
 .black-key {
-  width: 20px;
-  height: 100px;
+  width: calc(75% / 7);
+  height: 66%;
   background: linear-gradient(to bottom, #222, #000);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
   z-index: 1;
   border-bottom-left-radius: 5px;
   border-bottom-right-radius: 5px;
 }
 .invisible-key {
-  width: 20px;
-  height: 100px;
-}
-.bottom {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-top: auto;
-  gap: 10px;
+  width: calc(75% / 7);
+  height: 66%;
 }
 .text {
-  position: relative;
-  margin-top: 380px;
   text-align: center;
-  height: 100px;
+  height: 7rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -102,8 +104,6 @@ body {
   }
 }
 .control {
-  position: relative;
-  margin-top: 20px;
   display: flex;
   align-items: center;
   justify-content: center;

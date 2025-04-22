@@ -122,14 +122,7 @@ const stop = () => {
     }
   }
 };
-
-playPauseButton.onclick = playPause;
-timeSlider.oninput = (e: Event) => {
-  stop();
-  // @ts-ignore
-  currentSpan.textContent = getTimeString(e.target.value);
-};
-timeSlider.onmouseup = (e: MouseEvent) => {
+const move = (e: MouseEvent | TouchEvent) => {
   playPauseButton.disabled = true;
   timeSlider.disabled = true;
   // @ts-ignore
@@ -139,7 +132,16 @@ timeSlider.onmouseup = (e: MouseEvent) => {
   if (statePlaying) play();
   playPauseButton.disabled = false;
   timeSlider.disabled = false;
+}
+
+playPauseButton.onclick = playPause;
+timeSlider.oninput = (e: Event) => {
+  stop();
+  // @ts-ignore
+  currentSpan.textContent = getTimeString(e.target.value);
 };
+timeSlider.onmouseup = (e: MouseEvent) => move(e);
+timeSlider.ontouchend = (e: TouchEvent) => move(e);
 
 let updateKeyboardInterval: number | undefined;
 const updateKeyboard = () => {
