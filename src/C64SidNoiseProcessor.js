@@ -63,7 +63,7 @@ class C64SidNoiseProcessor extends AudioWorkletProcessor {
       }
       this.#sample++;
     }
-    this.port.postMessage({ syncOffset: this.#syncOffset });
+    this.port.postMessage({ type: 'sync', data: { frequency: parameters.frequency[0], offset: this.#syncOffset } });
 
     for (let channel = 0; channel < outputList[0].length; channel++) {
       const output = outputList[0][channel];

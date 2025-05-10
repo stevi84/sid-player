@@ -1,7 +1,5 @@
 export const FREQUENCY_FACTOR = 17734472 / 18 / 16777216; // 0.0587253835466173
 
-const nearestPowerOf2 = (n: number) => 1 << (31 - Math.clz32(n));
-
 type CustomAudioParamValue =
   | { startTime: number; value: number; interpolation: 'const' }
   | { startTime: number; startValue: number; endTime: number; endValue: number; interpolation: 'lin' }
@@ -213,110 +211,61 @@ export class CustomGenericAudioParam<T> {
   }
 }
 
-type AudioProcessor = (phase: number, pulseWidth: number) => number;
-const triangleProcessor: AudioProcessor = (phase: number) => (phase < 0.5 ? 4 * phase - 1 : 3 - 4 * phase);
-const sawToothProcessor: AudioProcessor = (phase: number) => 2 * phase - 1;
-const pulseProcessor: AudioProcessor = (phase: number, pulseWidth: number) => (phase < pulseWidth ? -1 : 1);
+/**
+ * AudioWorklet.port wird momentan nicht breit unterstützt, nur von Firefox ab v138. Unterstützung muss
+ * breiter werden, bevor es sinnvoll ist, diesen Branch weiter zu entwickeln.
+ */
 
-type GetSyncParameters = () => { frequency: number; offset: number };
-
+const OscillatorMap: { [key in Waveform]: string } = {
+  triangle: 'C64SidTriangleProcessor',
+  sawtooth: 'C64SidSawtoothProcessor',
+  pulse: 'C64SidPulseProcessor',
+  noise: 'C64SidNoiseProcessor',
+};
+type SetSyncParameters = (frequency: number, offset: number) => void;
 export class CommonOscillator {
   private _audioContext: AudioContext;
   private _gain: GainNode;
-  private _frequencyParameter: CustomAudioParam;
-  private _widthParameter: CustomAudioParam;
-  private _syncParameter: CustomGenericAudioParam<boolean>;
-  private _rngParameter: CustomGenericAudioParam<boolean>;
-  private _syncOffset: number;
-  private _oscillator: ScriptProcessorNode;
+  private _frequencyParameter: AudioParam;
+  private _widthParameter: AudioParam | undefined;
+  private _syncParameter: AudioParam | undefined;
+  private _rngParameter: AudioParam | undefined;
+  private _oscillator: AudioWorkletNode;
 
-  constructor(audioContext: AudioContext, audioProcessor: AudioProcessor, getSyncParameters: GetSyncParameters) {
+  constructor(audioContext: AudioContext, type: Waveform, setSyncParameters: SetSyncParameters) {
     this._audioContext = audioContext;
     this._gain = new GainNode(audioContext, { gain: 0 });
-    this._frequencyParameter = new CustomAudioParam(audioContext, 0);
-    this._widthParameter = new CustomAudioParam(audioContext, 0.5);
-    this._syncParameter = new CustomGenericAudioParam(audioContext, false);
-    this._rngParameter = new CustomGenericAudioParam(audioContext, false);
-    this._syncOffset = 0;
 
-    const bufferSize = nearestPowerOf2(Math.floor(audioContext.sampleRate / 60));
-    let phase = 0;
-    let syncPhase = 0;
-    let sample = 0;
-
-    this._oscillator = audioContext.createScriptProcessor(bufferSize, 1, 1);
-    this._oscillator.onaudioprocess = (e) => {
-      const values = new Float32Array(bufferSize);
-      const phasePerSample = this._frequencyParameter.value / audioContext.sampleRate;
-      const pulseWidth = this._widthParameter.value;
-      const sync = this._syncParameter.value;
-      const rng = this._rngParameter.value && audioProcessor === triangleProcessor;
-
-      const { frequency: syncFrequency, offset: syncOffset } = getSyncParameters();
-      const syncPhasePerSample = syncFrequency / audioContext.sampleRate;
-      syncPhase = (sample - syncOffset) * syncPhasePerSample;
-      syncPhase -= Math.floor(syncPhase);
-
-      if (phasePerSample !== 0) {
-        for (let i = 0; i < bufferSize; i++) {
-          sample++;
-
-          syncPhase += syncPhasePerSample;
-          // ring modulation
-          let value = rng && syncPhase >= 0.5 ? -1 : 1;
-          // synchronization
-          if (syncPhase >= 1) {
-            if (sync) {
-              this._syncOffset = sample - (syncPhase - 1) / syncPhasePerSample;
-              phase = ((syncPhase - 1) / syncPhasePerSample) * phasePerSample;
-            }
-            syncPhase -= Math.floor(syncPhase);
-          }
-
-          value *= audioProcessor(phase, pulseWidth);
-          values[i] = value;
-
-          phase += phasePerSample;
-          if (phase >= 1) {
-            this._syncOffset = sample - (phase - 1) / phasePerSample;
-            phase -= Math.floor(phase);
-          }
-        }
-      } else {
-        values.fill(0);
-      }
-
-      for (let channel = 0; channel < e.outputBuffer.numberOfChannels; channel++) {
-        const output = e.outputBuffer.getChannelData(channel);
-        for (let i = 0; i < bufferSize; i++) {
-          output[i] = values[i];
-        }
-      }
+    this._oscillator = new AudioWorkletNode(audioContext, OscillatorMap[type], {
+      processorOptions: { sampleRate: audioContext.sampleRate },
+    });
+    this._oscillator.port.onmessage = (e) => {
+      if (e.data.type === 'sync') setSyncParameters(e.data.data.frequency, e.data.data.offset);
     };
-
     this._oscillator.connect(this._gain);
+
+    this._frequencyParameter = this._oscillator.parameters.get('frequency')!;
+    this._widthParameter = this._oscillator.parameters.get('width');
+    this._syncParameter = this._oscillator.parameters.get('sync');
+    this._rngParameter = this._oscillator.parameters.get('rng');
   }
 
-  get frequency(): CustomAudioParam {
+  get frequency(): AudioParam {
     return this._frequencyParameter;
   }
 
-  get width(): CustomAudioParam {
+  get width(): AudioParam | undefined {
     return this._widthParameter;
   }
 
-  get sync(): CustomGenericAudioParam<boolean> {
+  get sync(): AudioParam | undefined {
     return this._syncParameter;
   }
 
-  get rng(): CustomGenericAudioParam<boolean> {
+  get rng(): AudioParam | undefined {
     return this._rngParameter;
   }
 
-  get syncOffset(): number {
-    return this._syncOffset;
-  }
-
   start(startTime: number = this._audioContext.currentTime) {
     this._gain.gain.cancelScheduledValues(startTime);
     this._gain.gain.setValueAtTime(1, startTime);
@@ -338,100 +287,12 @@ export class CommonOscillator {
   reset(startTime: number = this._audioContext.currentTime) {
     this._frequencyParameter.cancelScheduledValues(startTime);
     this._frequencyParameter.setValueAtTime(0, startTime);
-    this._widthParameter.cancelScheduledValues(startTime);
-    this._widthParameter.setValueAtTime(0.5, startTime);
-    this._syncParameter.cancelScheduledValues(startTime);
-    this._syncParameter.setValueAtTime(false, startTime);
-    this._rngParameter.cancelScheduledValues(startTime);
-    this._rngParameter.setValueAtTime(false, startTime);
-    this._syncOffset = 0;
-    this._gain.gain.cancelScheduledValues(startTime);
-    this._gain.gain.setValueAtTime(0, startTime);
-  }
-}
-
-export class NoiseOscillator {
-  private _audioContext: AudioContext;
-  private _gain: GainNode;
-  private _frequencyParameter: CustomAudioParam;
-  private _syncOffset: number;
-  private _oscillator: ScriptProcessorNode;
-
-  constructor(audioContext: AudioContext) {
-    this._audioContext = audioContext;
-    this._gain = new GainNode(audioContext, { gain: 0 });
-    this._frequencyParameter = new CustomAudioParam(audioContext, 0);
-    this._syncOffset = 0;
-
-    const bufferSize = nearestPowerOf2(Math.floor(audioContext.sampleRate / 60));
-    let phase = 0;
-    let phase2 = 0;
-    let sample = 0;
-    let value = 0;
-
-    this._oscillator = audioContext.createScriptProcessor(bufferSize, 1, 1);
-    this._oscillator.onaudioprocess = (e) => {
-      const values = new Float32Array(bufferSize);
-      const phasePerSample = this._frequencyParameter.value / audioContext.sampleRate;
-
-      for (let i = 0; i < bufferSize; i++) {
-        values[i] = value;
-        // http://www.sidmusic.org/sid/sidtech5.html
-        // phasePerSample*985248.6/0x100000/FREQUENCY_FACTOR
-        phase2 += 16 * phasePerSample;
-        if (phase2 >= 1) {
-          phase2 -= Math.floor(phase2);
-          value = 2 * Math.random() - 1;
-        }
-        phase += phasePerSample;
-        if (phase >= 1) {
-          this._syncOffset = sample + (phase - 1) / phasePerSample;
-          phase -= Math.floor(phase);
-        }
-        sample++;
-      }
-
-      for (let channel = 0; channel < e.outputBuffer.numberOfChannels; channel++) {
-        const output = e.outputBuffer.getChannelData(channel);
-        for (let i = 0; i < bufferSize; i++) {
-          output[i] = values[i];
-        }
-      }
-    };
-
-    this._oscillator.connect(this._gain);
-  }
-
-  get frequency(): CustomAudioParam {
-    return this._frequencyParameter;
-  }
-
-  get syncOffset(): number {
-    return this._syncOffset;
-  }
-
-  start(startTime: number = this._audioContext.currentTime) {
-    this._gain.gain.cancelScheduledValues(startTime);
-    this._gain.gain.setValueAtTime(1, startTime);
-  }
-
-  stop(startTime: number = this._audioContext.currentTime) {
-    this._gain.gain.cancelScheduledValues(startTime);
-    this._gain.gain.setValueAtTime(0, startTime);
-  }
-
-  connect(destination: AudioNode) {
-    this._gain.connect(destination);
-  }
-
-  disconnect() {
-    this._gain.disconnect();
-  }
-
-  reset(startTime: number = this._audioContext.currentTime) {
-    this._frequencyParameter.cancelScheduledValues(startTime);
-    this._frequencyParameter.setValueAtTime(0, startTime);
-    this._syncOffset = 0;
+    this._widthParameter?.cancelScheduledValues(startTime);
+    this._widthParameter?.setValueAtTime(0.5, startTime);
+    this._syncParameter?.cancelScheduledValues(startTime);
+    this._syncParameter?.setValueAtTime(0, startTime);
+    this._rngParameter?.cancelScheduledValues(startTime);
+    this._rngParameter?.setValueAtTime(0, startTime);
     this._gain.gain.cancelScheduledValues(startTime);
     this._gain.gain.setValueAtTime(0, startTime);
   }
@@ -445,7 +306,7 @@ export class SidVoice {
   private _triangleOsc: CommonOscillator;
   private _sawtoothOsc: CommonOscillator;
   private _pulseOsc: CommonOscillator;
-  private _noiseOsc: NoiseOscillator;
+  private _noiseOsc: CommonOscillator;
   private _activeWaveforms: CustomGenericAudioParam<Waveform[]>;
   private _attackDurationParameter: CustomAudioParam;
   private _decayDurationParameter: CustomAudioParam;
@@ -453,13 +314,13 @@ export class SidVoice {
   private _releaseDurationParameter: CustomAudioParam;
   private _adsrGainParameter: CustomAudioParam;
 
-  constructor(audioContext: AudioContext, getSyncParameters: GetSyncParameters) {
+  constructor(audioContext: AudioContext, setSyncParameters: SetSyncParameters) {
     this._audioContext = audioContext;
     this._adsrGain = new GainNode(audioContext, { gain: 0 });
-    this._triangleOsc = new CommonOscillator(audioContext, triangleProcessor, getSyncParameters);
-    this._sawtoothOsc = new CommonOscillator(audioContext, sawToothProcessor, getSyncParameters);
-    this._pulseOsc = new CommonOscillator(audioContext, pulseProcessor, getSyncParameters);
-    this._noiseOsc = new NoiseOscillator(audioContext);
+    this._triangleOsc = new CommonOscillator(audioContext, 'triangle', setSyncParameters);
+    this._sawtoothOsc = new CommonOscillator(audioContext, 'sawtooth', setSyncParameters);
+    this._pulseOsc = new CommonOscillator(audioContext, 'pulse', setSyncParameters);
+    this._noiseOsc = new CommonOscillator(audioContext, 'noise', setSyncParameters);
     this._activeWaveforms = new CustomGenericAudioParam<Waveform[]>(audioContext, []);
     this._attackDurationParameter = new CustomAudioParam(audioContext, 0.002);
     this._decayDurationParameter = new CustomAudioParam(audioContext, 0.006);
@@ -485,7 +346,7 @@ export class SidVoice {
     return this._pulseOsc;
   }
 
-  get noiseOscillator(): NoiseOscillator {
+  get noiseOscillator(): CommonOscillator {
     return this._noiseOsc;
   }
 

@@ -94,7 +94,7 @@ class C64SidPulseProcessor extends AudioWorkletProcessor {
           this.#phase -= Math.floor(this.#phase);
         }
       }
-      this.port.postMessage({ syncOffset: this.#syncOffset });
+      this.port.postMessage({ type: 'sync', data: { frequency: parameters.frequency[0], offset: this.#syncOffset } });
     } else {
       values.fill(0);
     }

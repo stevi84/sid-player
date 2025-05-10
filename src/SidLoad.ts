@@ -14,6 +14,10 @@ import { Command, Dotted, Duration, Modifier, Note, Octave, parseSid } from './S
 import { currentNotes, lastNotes, notes } from './SidPlayer';
 
 export const audioContext = new AudioContext();
+await audioContext.audioWorklet.addModule("C64SidTriangleProcessor.js");
+await audioContext.audioWorklet.addModule("C64SidSawtoothProcessor.js");
+await audioContext.audioWorklet.addModule("C64SidPulseProcessor.js");
+await audioContext.audioWorklet.addModule("C64SidNoiseProcessor.js");
 await audioContext.suspend();
 
 // check for cancelAndHoldAtTime, not implemented in Mozilla Firefox
