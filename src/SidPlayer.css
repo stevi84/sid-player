@@ -114,12 +114,15 @@ body {
   padding: 12px 20px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
-#fileSelect {
+#leftFileSelect, #rightFileSelect {
   padding: 5px 10px;
   border-radius: 6px;
   border: 1px solid #ccc;
   background: white;
   font-size: 1em;
+}
+#rightFileSelect, #rightFile, #rightClear {
+  display: none;
 }
 /* https://css-tricks.com/making-pure-css-playpause-button/ */
 .playPauseButton {

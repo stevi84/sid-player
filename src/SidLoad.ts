@@ -8,16 +8,13 @@ import {
   getLowPassFrequency,
   getLowPassValue,
   Sid as SidClass,
+  SidFilter,
   SidVoice,
 } from './C64Sid';
 import { Command, Dotted, Duration, Modifier, Note, Octave, parseSid } from './SidParse';
-import { currentNotes, lastNotes, notes } from './SidPlayer';
 
 export const audioContext = new AudioContext();
-await audioContext.audioWorklet.addModule("C64SidTriangleProcessor.js");
-await audioContext.audioWorklet.addModule("C64SidSawtoothProcessor.js");
-await audioContext.audioWorklet.addModule("C64SidPulseProcessor.js");
-await audioContext.audioWorklet.addModule("C64SidNoiseProcessor.js");
+await audioContext.audioWorklet.addModule("C64SidProcessor.js");
 await audioContext.suspend();
 
 // check for cancelAndHoldAtTime, not implemented in Mozilla Firefox
@@ -32,7 +29,22 @@ try {
   throw e;
 }
 
-const Sid = new SidClass(audioContext);
+const sidLeft = new SidClass(audioContext);
+const sidRight = new SidClass(audioContext);
+const merger = new ChannelMergerNode(audioContext, { numberOfInputs: 2 });
+sidLeft.connect(audioContext.destination);
+
+export const connectMono = () => {
+  sidLeft.connect(audioContext.destination);
+  sidRight.disconnect();
+  merger.disconnect();
+}
+
+export const connectStereo = () => {
+  sidLeft.connect(merger, 0, 0);
+  sidRight.connect(merger, 0, 1);
+  merger.connect(audioContext.destination);
+}
 
 const calcFrequency = (
   note: Note,
@@ -124,17 +136,11 @@ const setFrequencyPortamentoVibrato = (
     if (Math.abs(frequency - portamento.startFrequency) >= Math.abs(porRate * duration)) {
       const targetValue = portamento.startFrequency + porRate * duration;
       voice.frequency(portamento.startFrequency, startTime);
-      voice.triangleOscillator.frequency.linearRampToValueAtTime(targetValue, startTime + duration);
-      voice.sawtoothOscillator.frequency.linearRampToValueAtTime(targetValue, startTime + duration);
-      voice.pulseOscillator.frequency.linearRampToValueAtTime(targetValue, startTime + duration);
-      voice.noiseOscillator.frequency.linearRampToValueAtTime(targetValue, startTime + duration);
+      voice.frequencyParam.linearRampToValueAtTime(targetValue, startTime + duration);
     } else {
       const porDuration = (frequency - portamento.startFrequency) / porRate;
       voice.frequency(portamento.startFrequency, startTime);
-      voice.triangleOscillator.frequency.linearRampToValueAtTime(frequency, startTime + porDuration);
-      voice.sawtoothOscillator.frequency.linearRampToValueAtTime(frequency, startTime + porDuration);
-      voice.pulseOscillator.frequency.linearRampToValueAtTime(frequency, startTime + porDuration);
-      voice.noiseOscillator.frequency.linearRampToValueAtTime(frequency, startTime + porDuration);
+      voice.frequencyParam.linearRampToValueAtTime(frequency, startTime + porDuration);
       if (vibrato.depth !== 0)
         setFrequencyPortamentoVibrato(
           voice,
@@ -155,51 +161,21 @@ const setFrequencyPortamentoVibrato = (
       if (time + vibrato.rate / 60 < duration) {
         time += vibrato.rate / 60;
         if (up) {
-          voice.triangleOscillator.frequency.linearRampToValueAtTime(upperFreq, startTime + time);
-          voice.sawtoothOscillator.frequency.linearRampToValueAtTime(upperFreq, startTime + time);
-          voice.pulseOscillator.frequency.linearRampToValueAtTime(upperFreq, startTime + time);
-          voice.noiseOscillator.frequency.linearRampToValueAtTime(upperFreq, startTime + time);
+          voice.frequencyParam.linearRampToValueAtTime(upperFreq, startTime + time);
           voice.frequency(upperFreq, startTime + time);
         } else {
-          voice.triangleOscillator.frequency.linearRampToValueAtTime(frequency, startTime + time);
-          voice.sawtoothOscillator.frequency.linearRampToValueAtTime(frequency, startTime + time);
-          voice.pulseOscillator.frequency.linearRampToValueAtTime(frequency, startTime + time);
-          voice.noiseOscillator.frequency.linearRampToValueAtTime(frequency, startTime + time);
+          voice.frequencyParam.linearRampToValueAtTime(frequency, startTime + time);
           voice.frequency(frequency, startTime + time);
         }
       } else {
         if (up) {
-          voice.triangleOscillator.frequency.linearRampToValueAtTime(
-            frequency + vibRate * (duration - time),
-            startTime + duration
-          );
-          voice.sawtoothOscillator.frequency.linearRampToValueAtTime(
-            frequency + vibRate * (duration - time),
-            startTime + duration
-          );
-          voice.pulseOscillator.frequency.linearRampToValueAtTime(
-            frequency + vibRate * (duration - time),
-            startTime + duration
-          );
-          voice.noiseOscillator.frequency.linearRampToValueAtTime(
+          voice.frequencyParam.linearRampToValueAtTime(
             frequency + vibRate * (duration - time),
             startTime + duration
           );
           voice.frequency(frequency + vibRate * (duration - time), startTime + time);
         } else {
-          voice.triangleOscillator.frequency.linearRampToValueAtTime(
-            upperFreq - vibRate * (duration - time),
-            startTime + duration
-          );
-          voice.sawtoothOscillator.frequency.linearRampToValueAtTime(
-            upperFreq - vibRate * (duration - time),
-            startTime + duration
-          );
-          voice.pulseOscillator.frequency.linearRampToValueAtTime(
-            upperFreq - vibRate * (duration - time),
-            startTime + duration
-          );
-          voice.noiseOscillator.frequency.linearRampToValueAtTime(
+          voice.frequencyParam.linearRampToValueAtTime(
             upperFreq - vibRate * (duration - time),
             startTime + duration
           );
@@ -222,27 +198,27 @@ const setPulseWidthSweep = (
   const rate = sweepRate * 60;
   let time = 0;
   let value = startValue;
-  voice.pulseOscillator.width.setValueAtTime(startValue / 4095, startTime);
+  voice.widthParam.setValueAtTime(startValue / 4095, startTime);
   do {
     if (rate > 0 && time + (4095 - value) / rate < duration) {
       time += (4095 - value) / rate;
       value = 0;
-      voice.pulseOscillator.width.linearRampToValueAtTime(1, startTime + time);
-      voice.pulseOscillator.width.setValueAtTime(0, startTime + time);
+      voice.widthParam.linearRampToValueAtTime(1, startTime + time);
+      voice.widthParam.setValueAtTime(0, startTime + time);
     } else if (rate < 0 && time - value / rate < duration) {
       time -= value / rate;
       value = 4095;
-      voice.pulseOscillator.width.linearRampToValueAtTime(0, startTime + time);
-      voice.pulseOscillator.width.setValueAtTime(1, startTime + time);
+      voice.widthParam.linearRampToValueAtTime(0, startTime + time);
+      voice.widthParam.setValueAtTime(1, startTime + time);
     } else {
-      voice.pulseOscillator.width.linearRampToValueAtTime(
+      voice.widthParam.linearRampToValueAtTime(
         (value + rate * (duration - time)) / 4095,
         startTime + duration
       );
       time = duration;
     }
   } while (time < duration);
-  voice.pulseOscillator.width.setValueAtTime(startValue / 4095, startTime + duration);
+  voice.widthParam.setValueAtTime(startValue / 4095, startTime + duration);
 };
 
 const getFilterSweepValues = (
@@ -263,92 +239,90 @@ const getFilterSweepValues = (
   return values;
 };
 
-const setFilterFrequencyWidthSweep = (startTime: number, startValue: number, sweepRate: number, duration: number) => {
+const setFilterFrequencyWidthSweep = (filter: SidFilter, startTime: number, startValue: number, sweepRate: number, duration: number) => {
   const rate = sweepRate * 60;
   let time = 0;
   let value = startValue;
-  Sid.filter.c64Frequency(startValue, startTime);
+  filter.c64Frequency(startValue, startTime);
   do {
     if (rate > 0 && time + (2047 - value) / rate < duration) {
       const dur = (2047 - value) / rate;
-      Sid.filter.lowPassFilter.frequency.setValueCurveAtTime(
+      filter.lowPassFilter.frequency.setValueCurveAtTime(
         getFilterSweepValues(value, rate, dur, getLowPassFrequency),
         startTime + time,
         dur
       );
-      Sid.filter.highPassFilter.frequency.setValueCurveAtTime(
+      filter.highPassFilter.frequency.setValueCurveAtTime(
         getFilterSweepValues(value, rate, dur, getHighPassFrequency),
         startTime + time,
         dur
       );
       const bandPassValues = getFilterSweepValues(value, rate, dur, getBandPassFrequency);
-      Sid.filter.bandPassFilter.frequency.setValueCurveAtTime(bandPassValues, startTime + time, dur);
-      Sid.filter.bandPassPeakFilter.frequency.setValueCurveAtTime(bandPassValues, startTime + time, dur);
+      filter.bandPassFilter.frequency.setValueCurveAtTime(bandPassValues, startTime + time, dur);
+      filter.bandPassPeakFilter.frequency.setValueCurveAtTime(bandPassValues, startTime + time, dur);
       time += dur;
       value = 0;
     } else if (rate < 0 && time - value / rate < duration) {
       const dur = -value / rate;
-      Sid.filter.lowPassFilter.frequency.setValueCurveAtTime(
+      filter.lowPassFilter.frequency.setValueCurveAtTime(
         getFilterSweepValues(value, rate, dur, getLowPassFrequency),
         startTime + time,
         dur
       );
-      Sid.filter.highPassFilter.frequency.setValueCurveAtTime(
+      filter.highPassFilter.frequency.setValueCurveAtTime(
         getFilterSweepValues(value, rate, dur, getHighPassFrequency),
         startTime + time,
         dur
       );
       const bandPassValues = getFilterSweepValues(value, rate, dur, getBandPassFrequency);
-      Sid.filter.bandPassFilter.frequency.setValueCurveAtTime(bandPassValues, startTime + time, dur);
-      Sid.filter.bandPassPeakFilter.frequency.setValueCurveAtTime(bandPassValues, startTime + time, dur);
+      filter.bandPassFilter.frequency.setValueCurveAtTime(bandPassValues, startTime + time, dur);
+      filter.bandPassPeakFilter.frequency.setValueCurveAtTime(bandPassValues, startTime + time, dur);
       time += dur;
       value = 2047;
     } else {
       // -0.000001 otherwise Failed to execute 'setValueAtTime' on 'AudioParam': setValueAtTime(730.956, 1.8) overlaps setValueCurveAtTime(..., 1.476253236565001, 0.3237467634349995)
       const dur = duration - time - 0.000001;
-      Sid.filter.lowPassFilter.frequency.setValueCurveAtTime(
+      filter.lowPassFilter.frequency.setValueCurveAtTime(
         getFilterSweepValues(value, rate, dur, getLowPassFrequency),
         startTime + time,
         dur
       );
-      Sid.filter.highPassFilter.frequency.setValueCurveAtTime(
+      filter.highPassFilter.frequency.setValueCurveAtTime(
         getFilterSweepValues(value, rate, dur, getHighPassFrequency),
         startTime + time,
         dur
       );
       const bandPassValues = getFilterSweepValues(value, rate, dur, getBandPassFrequency);
-      Sid.filter.bandPassFilter.frequency.setValueCurveAtTime(bandPassValues, startTime + time, dur);
-      Sid.filter.bandPassPeakFilter.frequency.setValueCurveAtTime(bandPassValues, startTime + time, dur);
+      filter.bandPassFilter.frequency.setValueCurveAtTime(bandPassValues, startTime + time, dur);
+      filter.bandPassPeakFilter.frequency.setValueCurveAtTime(bandPassValues, startTime + time, dur);
       time = duration;
     }
   } while (time < duration);
-  Sid.filter.c64Frequency(startValue, startTime + duration);
+  filter.c64Frequency(startValue, startTime + duration);
 };
 
 const setAutoFilterFrequency = (
+  filter: SidFilter,
   startTime: number,
   noteFrequency: number,
   autoFilter: number,
-  filter: FilterMode[]
+  filterModes: FilterMode[]
 ): number => {
   // TODO that's probably incorrect, but difficult to determine
   const filterFrequency = 2 * noteFrequency;
-  let filterValue = filter.includes('lowpass')
+  let filterValue = filterModes.includes('lowpass')
     ? getLowPassValue(filterFrequency)
-    : filter.includes('highpass')
+    : filterModes.includes('highpass')
     ? getHighPassValue(filterFrequency)
     : getBandPassValue(filterFrequency);
   filterValue = Math.max(Math.min(filterValue + autoFilter, 2047), 0);
-  Sid.filter.c64Frequency(filterValue, startTime);
+  filter.c64Frequency(filterValue, startTime);
   return filterValue;
 };
 
-const initVoices = (voices: SidVoice[]) => {
+const initVoices = (sid: SidClass) => {
+  const voices = sid.voices;
   for (let i = 0; i < voices.length; i++) {
-    notes[i] = [];
-    currentNotes[i] = -1;
-    lastNotes[i] = -1;
-
     voices[i].c64Waveform(4);
     voices[i].c64AttackDuration(2);
     voices[i].c64DecayDuration(0);
@@ -356,7 +330,7 @@ const initVoices = (voices: SidVoice[]) => {
     voices[i].c64ReleaseDuration(5);
     voices[i].c64PulseWidth(2048);
   }
-  Sid.c64Volume(8);
+  sid.c64Volume(8);
 };
 
 const logVoices = (voicesData: Command[][]) => {
@@ -370,9 +344,13 @@ const logVoices = (voicesData: Command[][]) => {
 
 type CommandPointer = { voice: number; index: number };
 type PhraseDefinition = { index: number; pointer: CommandPointer };
+export type NoteViz = { start: number; stop: number; index: number };
 
-const loadVoices = (voices: SidVoice[], voicesData: Command[][], startTime: number): number => {
-  initVoices(voices);
+const loadVoices = (sid: SidClass, voicesData: Command[][], startTime: number): { duration: number, notes: NoteViz[][]} => {
+  const voices = sid.voices;
+  initVoices(sid);
+  
+  const notes: NoteViz[][] = [[], [], []];
 
   const currentTime = audioContext.currentTime;
   let globalTime = currentTime;
@@ -469,12 +447,12 @@ const loadVoices = (voices: SidVoice[], voicesData: Command[][], startTime: numb
           break;
         case 'vol':
           volume = cmd.data.value;
-          Sid.c64Volume(volume, Math.max(time - startTime, currentTime));
+          sid.c64Volume(volume, Math.max(time - startTime, currentTime));
           break;
         case 'bmp':
           if (cmd.data.value === 'up' && volume < 15) volume++;
           if (cmd.data.value === 'down' && volume > 0) volume--;
-          Sid.c64Volume(volume, Math.max(time - startTime, currentTime));
+          sid.c64Volume(volume, Math.max(time - startTime, currentTime));
           break;
         case 'hed':
           hed = { pointer: { ...cmdPointer }, count: cmd.data.value - 1 };
@@ -506,23 +484,23 @@ const loadVoices = (voices: SidVoice[], voicesData: Command[][], startTime: numb
           break;
         case 'f-m':
           filter = cmd.data.value.slice();
-          Sid.filter.filterType(cmd.data.value, Math.max(time - startTime, currentTime));
+          sid.filter.filterType(cmd.data.value, Math.max(time - startTime, currentTime));
           break;
         case 'aut':
           autoFilter = cmd.data.value;
           break;
         case 'res':
-          Sid.filter.c64Resonance(cmd.data.value, Math.max(time - startTime, currentTime));
+          sid.filter.c64Resonance(cmd.data.value, Math.max(time - startTime, currentTime));
           break;
         case 'flt':
-          Sid.filterVoice(voiceIndex, cmd.data.value === 'yes' ? 1 : 0, Math.max(time - startTime, currentTime));
+          sid.filterVoice(voiceIndex, cmd.data.value === 'yes' ? 1 : 0, Math.max(time - startTime, currentTime));
           break;
         case 'f-s':
           filterFrequencySweepRate = cmd.data.value;
           break;
         case 'f-c':
           filterFrequency = cmd.data.value * 8;
-          Sid.filter.c64Frequency(filterFrequency, Math.max(time - startTime, currentTime));
+          sid.filter.c64Frequency(filterFrequency, Math.max(time - startTime, currentTime));
           break;
         case 'f-x':
           // If you want to pass the external audio signal through the filter, use the F-X command.
@@ -577,7 +555,7 @@ const loadVoices = (voices: SidVoice[], voicesData: Command[][], startTime: numb
           // Measure markers have no effect when a voice is played and are used strictly for editing purposes.
           break;
         case '3-O':
-          Sid.voice3Off(cmd.data.value === 'yes', Math.max(time - startTime, currentTime));
+          sid.voice3Off(cmd.data.value === 'yes', Math.max(time - startTime, currentTime));
           break;
         case 'flg':
           // For communication from Sidplayer to the BASIC program, the FLG command is available.
@@ -609,9 +587,9 @@ const loadVoices = (voices: SidVoice[], voicesData: Command[][], startTime: numb
             if (pulseWidthSweepRate !== 0)
               setPulseWidthSweep(voices[voiceIndex], time - startTime, pulseWidth, pulseWidthSweepRate, duration);
             if (autoFilter !== 0)
-              filterFrequency = setAutoFilterFrequency(time - startTime, noteFrequency, autoFilter, filter);
+              filterFrequency = setAutoFilterFrequency(sid.filter, time - startTime, noteFrequency, autoFilter, filter);
             if (filterFrequencySweepRate !== 0)
-              setFilterFrequencyWidthSweep(time - startTime, filterFrequency, filterFrequencySweepRate, duration);
+              setFilterFrequencyWidthSweep(sid.filter, time - startTime, filterFrequency, filterFrequencySweepRate, duration);
             if (!tie) voices[voiceIndex].start(time - startTime);
             tie = cmd.data.tie;
             if (!tie) voices[voiceIndex].stop(time - startTime + Math.max(duration - releasePoint / 60, 0));
@@ -619,7 +597,7 @@ const loadVoices = (voices: SidVoice[], voicesData: Command[][], startTime: numb
             if (noteIndex >= 0 && noteIndex <= 95)
               notes[voiceIndex].push({
                 start: time - startTime,
-                stop: time - startTime + Math.max(duration - Math.max(releasePoint - 2, 0) / 60, 0),
+                stop: time - startTime + Math.max(duration - releasePoint / 60, 0),
                 index: noteIndex,
               });
           }
@@ -668,20 +646,20 @@ const loadVoices = (voices: SidVoice[], voicesData: Command[][], startTime: numb
     if (voiceIndex >= voices.length) voiceIndex = 0;
   } while (voicesVars.some((v) => !v.halt && v.cmdPointer.index < voicesData[v.cmdPointer.voice].length));
 
-  return Math.floor(Math.max(...voicesVars.map((v) => v.time - currentTime)) * 10) / 10;
+  return { duration: Math.floor(Math.max(...voicesVars.map((v) => v.time - currentTime)) * 10) / 10, notes };
 };
 
-let voicesData: Command[][];
+export type Channel = 'left' | 'right';
 
-export const loadFile = async (file: Blob): Promise<{ duration: number; text: string[] }> => {
+export const loadFile = async (channel: Channel, file: Blob): Promise<{ voicesData: Command[][]; duration: number; text: string[], notes: NoteViz[][] }> => {
   const sidData = await parseSid(file);
-  voicesData = sidData.voices;
-  const duration = reloadVoices(0);
-  return { duration, text: sidData.text };
+  const { duration, notes } = reloadVoices(channel, sidData.voices, 0);
+  return { voicesData: sidData.voices, duration, text: sidData.text, notes };
 };
 
-export const reloadVoices = (startTime: number): number => {
-  Sid.reset(0);
+export const reloadVoices = (channel: Channel, voicesData: Command[][], startTime: number): { duration: number, notes: NoteViz[][] } => {
+  const sid = channel === 'right' ? sidRight : sidLeft;
+  sid.reset(0);
   // logVoices(voicesData);
-  return loadVoices(Sid.voices, voicesData, startTime);
+  return loadVoices(sid, voicesData, startTime);
 };

@@ -211,90 +211,64 @@ export class CustomGenericAudioParam<T> {
   }
 }
 
-/**
- * AudioWorklet.port wird momentan nicht breit unterstützt, nur von Firefox ab v138. Unterstützung muss
- * breiter werden, bevor es sinnvoll ist, diesen Branch weiter zu entwickeln.
- */
+type VoiceParams = {
+  waveform: AudioParam,
+  frequency: AudioParam,
+  width: AudioParam,
+  sync: AudioParam,
+  rng: AudioParam,
+}
 
-const OscillatorMap: { [key in Waveform]: string } = {
-  triangle: 'C64SidTriangleProcessor',
-  sawtooth: 'C64SidSawtoothProcessor',
-  pulse: 'C64SidPulseProcessor',
-  noise: 'C64SidNoiseProcessor',
-};
-type SetSyncParameters = (frequency: number, offset: number) => void;
-export class CommonOscillator {
+export class SidOscillator {
   private _audioContext: AudioContext;
-  private _gain: GainNode;
-  private _frequencyParameter: AudioParam;
-  private _widthParameter: AudioParam | undefined;
-  private _syncParameter: AudioParam | undefined;
-  private _rngParameter: AudioParam | undefined;
   private _oscillator: AudioWorkletNode;
 
-  constructor(audioContext: AudioContext, type: Waveform, setSyncParameters: SetSyncParameters) {
+  constructor(audioContext: AudioContext) {
     this._audioContext = audioContext;
-    this._gain = new GainNode(audioContext, { gain: 0 });
-
-    this._oscillator = new AudioWorkletNode(audioContext, OscillatorMap[type], {
+    this._oscillator = new AudioWorkletNode(audioContext, 'C64SidProcessor', {
+      numberOfInputs: 1,
+      numberOfOutputs: 3,
+      outputChannelCount: [1, 1, 1],
       processorOptions: { sampleRate: audioContext.sampleRate },
     });
-    this._oscillator.port.onmessage = (e) => {
-      if (e.data.type === 'sync') setSyncParameters(e.data.data.frequency, e.data.data.offset);
-    };
-    this._oscillator.connect(this._gain);
-
-    this._frequencyParameter = this._oscillator.parameters.get('frequency')!;
-    this._widthParameter = this._oscillator.parameters.get('width');
-    this._syncParameter = this._oscillator.parameters.get('sync');
-    this._rngParameter = this._oscillator.parameters.get('rng');
   }
 
-  get frequency(): AudioParam {
-    return this._frequencyParameter;
+  get voice1Params(): VoiceParams {
+    return {
+      waveform: this._oscillator.parameters.get('voice1Waveform')!,
+      frequency: this._oscillator.parameters.get('voice1Frequency')!,
+      width: this._oscillator.parameters.get('voice1Width')!,
+      sync: this._oscillator.parameters.get('voice1Sync')!,
+      rng: this._oscillator.parameters.get('voice1Rng')!,
+    }
   }
 
-  get width(): AudioParam | undefined {
-    return this._widthParameter;
+  get voice2Params(): VoiceParams {
+    return {
+      waveform: this._oscillator.parameters.get('voice2Waveform') !,
+      frequency: this._oscillator.parameters.get('voice2Frequency') !,
+      width: this._oscillator.parameters.get('voice2Width') !,
+      sync: this._oscillator.parameters.get('voice2Sync') !,
+      rng: this._oscillator.parameters.get('voice2Rng') !,
+    }
+  }
+  
+  get voice3Params(): VoiceParams {
+    return {
+      waveform: this._oscillator.parameters.get('voice3Waveform')!,
+      frequency: this._oscillator.parameters.get('voice3Frequency')!,
+      width: this._oscillator.parameters.get('voice3Width')!,
+      sync: this._oscillator.parameters.get('voice3Sync')!,
+      rng: this._oscillator.parameters.get('voice3Rng')!,
+    }
   }
 
-  get sync(): AudioParam | undefined {
-    return this._syncParameter;
-  }
-
-  get rng(): AudioParam | undefined {
-    return this._rngParameter;
-  }
-
-  start(startTime: number = this._audioContext.currentTime) {
-    this._gain.gain.cancelScheduledValues(startTime);
-    this._gain.gain.setValueAtTime(1, startTime);
-  }
-
-  stop(startTime: number = this._audioContext.currentTime) {
-    this._gain.gain.cancelScheduledValues(startTime);
-    this._gain.gain.setValueAtTime(0, startTime);
-  }
-
-  connect(destination: AudioNode) {
-    this._gain.connect(destination);
+  connect(destination: AudioNode, output: number, input?: number) {
+    this._oscillator.connect(destination, output, input);
   }
 
   disconnect() {
-    this._gain.disconnect();
-  }
-
-  reset(startTime: number = this._audioContext.currentTime) {
-    this._frequencyParameter.cancelScheduledValues(startTime);
-    this._frequencyParameter.setValueAtTime(0, startTime);
-    this._widthParameter?.cancelScheduledValues(startTime);
-    this._widthParameter?.setValueAtTime(0.5, startTime);
-    this._syncParameter?.cancelScheduledValues(startTime);
-    this._syncParameter?.setValueAtTime(0, startTime);
-    this._rngParameter?.cancelScheduledValues(startTime);
-    this._rngParameter?.setValueAtTime(0, startTime);
-    this._gain.gain.cancelScheduledValues(startTime);
-    this._gain.gain.setValueAtTime(0, startTime);
+    this._oscillator.disconnect();
   }
 }
 
@@ -303,79 +277,42 @@ export type Waveform = 'triangle' | 'sawtooth' | 'pulse' | 'noise';
 export class SidVoice {
   private _audioContext: AudioContext;
   private _adsrGain: GainNode;
-  private _triangleOsc: CommonOscillator;
-  private _sawtoothOsc: CommonOscillator;
-  private _pulseOsc: CommonOscillator;
-  private _noiseOsc: CommonOscillator;
-  private _activeWaveforms: CustomGenericAudioParam<Waveform[]>;
+  private _waveformParameter: AudioParam;
+  private _frequencyParameter: AudioParam;
+  private _widthParameter: AudioParam;
+  private _syncParameter: AudioParam;
+  private _rngParameter: AudioParam;
   private _attackDurationParameter: CustomAudioParam;
   private _decayDurationParameter: CustomAudioParam;
   private _sustainLevelParameter: CustomAudioParam;
   private _releaseDurationParameter: CustomAudioParam;
   private _adsrGainParameter: CustomAudioParam;
 
-  constructor(audioContext: AudioContext, setSyncParameters: SetSyncParameters) {
+  constructor(audioContext: AudioContext, voiceParams: VoiceParams) {
     this._audioContext = audioContext;
     this._adsrGain = new GainNode(audioContext, { gain: 0 });
-    this._triangleOsc = new CommonOscillator(audioContext, 'triangle', setSyncParameters);
-    this._sawtoothOsc = new CommonOscillator(audioContext, 'sawtooth', setSyncParameters);
-    this._pulseOsc = new CommonOscillator(audioContext, 'pulse', setSyncParameters);
-    this._noiseOsc = new CommonOscillator(audioContext, 'noise', setSyncParameters);
-    this._activeWaveforms = new CustomGenericAudioParam<Waveform[]>(audioContext, []);
+    this._waveformParameter = voiceParams.waveform;
+    this._frequencyParameter = voiceParams.frequency;
+    this._widthParameter = voiceParams.width;
+    this._syncParameter = voiceParams.sync;
+    this._rngParameter = voiceParams.rng;
     this._attackDurationParameter = new CustomAudioParam(audioContext, 0.002);
     this._decayDurationParameter = new CustomAudioParam(audioContext, 0.006);
     this._sustainLevelParameter = new CustomAudioParam(audioContext, 0);
     this._releaseDurationParameter = new CustomAudioParam(audioContext, 0.006);
     this._adsrGainParameter = new CustomAudioParam(audioContext, 0);
-
-    this._triangleOsc.connect(this._adsrGain);
-    this._sawtoothOsc.connect(this._adsrGain);
-    this._pulseOsc.connect(this._adsrGain);
-    this._noiseOsc.connect(this._adsrGain);
   }
 
-  get triangleOscillator(): CommonOscillator {
-    return this._triangleOsc;
+  get inNode(): GainNode {
+    return this._adsrGain;
   }
-
-  get sawtoothOscillator(): CommonOscillator {
-    return this._sawtoothOsc;
+  
+  get frequencyParam(): AudioParam {
+    return this._frequencyParameter;
   }
-
-  get pulseOscillator(): CommonOscillator {
-    return this._pulseOsc;
-  }
-
-  get noiseOscillator(): CommonOscillator {
-    return this._noiseOsc;
-  }
-
-  get syncFrequency(): number {
-    if (this._activeWaveforms.value.length === 0) return 0;
-    switch (this._activeWaveforms.value[0]) {
-      case 'triangle':
-        return this._triangleOsc.frequency.value;
-      case 'sawtooth':
-        return this._sawtoothOsc.frequency.value;
-      case 'pulse':
-        return this._pulseOsc.frequency.value;
-      case 'noise':
-        return this._noiseOsc.frequency.value;
-    }
-  }
-
-  get syncOffset(): number {
-    if (this._activeWaveforms.value.length === 0) return 0;
-    switch (this._activeWaveforms.value[0]) {
-      case 'triangle':
-        return this._triangleOsc.syncOffset;
-      case 'sawtooth':
-        return this._sawtoothOsc.syncOffset;
-      case 'pulse':
-        return this._pulseOsc.syncOffset;
-      case 'noise':
-        return this._noiseOsc.syncOffset;
-    }
+  
+  get widthParam(): AudioParam {
+    return this._widthParameter;
   }
 
   /**
@@ -392,10 +329,7 @@ export class SidVoice {
    * @param startTime
    */
   frequency(value: number, startTime: number = this._audioContext.currentTime) {
-    this._triangleOsc.frequency.setValueAtTime(value, startTime);
-    this._sawtoothOsc.frequency.setValueAtTime(value, startTime);
-    this._pulseOsc.frequency.setValueAtTime(value, startTime);
-    this._noiseOsc.frequency.setValueAtTime(value, startTime);
+    this._frequencyParameter.setValueAtTime(value, startTime);
   }
 
   /**
@@ -404,43 +338,11 @@ export class SidVoice {
    * @param startTime
    */
   c64Waveform(value: number, startTime: number = this._audioContext.currentTime) {
-    const waveforms: Waveform[] = [];
-    if ((value & 8) !== 0) {
-      waveforms.push('noise');
-    }
-    if ((value & 4) !== 0) {
-      waveforms.push('pulse');
-    }
-    if ((value & 2) !== 0) {
-      waveforms.push('sawtooth');
-    }
-    if ((value & 1) !== 0) {
-      waveforms.push('triangle');
-    }
-    this.waveform(waveforms, startTime);
+    this._waveformParameter.setValueAtTime(value, startTime);
   }
   waveform(value: Waveform[], startTime: number = this._audioContext.currentTime) {
-    if (value.includes('triangle')) {
-      this._triangleOsc.start(startTime);
-    } else {
-      this._triangleOsc.stop(startTime);
-    }
-    if (value.includes('sawtooth')) {
-      this._sawtoothOsc.start(startTime);
-    } else {
-      this._sawtoothOsc.stop(startTime);
-    }
-    if (value.includes('pulse')) {
-      this._pulseOsc.start(startTime);
-    } else {
-      this._pulseOsc.stop(startTime);
-    }
-    if (value.includes('noise')) {
-      this._noiseOsc.start(startTime);
-    } else {
-      this._noiseOsc.stop(startTime);
-    }
-    this._activeWaveforms.setValueAtTime(value.slice(), startTime);
+    const waveforms: number = (value.includes('triangle') ? 1 : 0) + (value.includes('sawtooth') ? 2 : 0) + (value.includes('pulse') ? 4 : 0) + (value.includes('noise') ? 8 : 0);
+    this.c64Waveform(waveforms, startTime);
   }
 
   private static timeTable: number[] = [
@@ -529,7 +431,7 @@ export class SidVoice {
    * @param startTime
    */
   pulseWidth(value: number, startTime: number = this._audioContext.currentTime) {
-    this._pulseOsc.width.setValueAtTime(value, startTime);
+    this._widthParameter.setValueAtTime(value, startTime);
   }
 
   /**
@@ -538,7 +440,7 @@ export class SidVoice {
    * @param startTime
    */
   c64Sync(value: number, startTime: number = this._audioContext.currentTime) {
-    this.sync(Boolean(value), startTime);
+    this._syncParameter.setValueAtTime(value, startTime);
   }
   /**
    *
@@ -546,9 +448,7 @@ export class SidVoice {
    * @param startTime
    */
   sync(value: boolean, startTime: number = this._audioContext.currentTime) {
-    this._triangleOsc.sync.setValueAtTime(value, startTime);
-    this._sawtoothOsc.sync.setValueAtTime(value, startTime);
-    this._pulseOsc.sync.setValueAtTime(value, startTime);
+    this.c64Sync(Number(value), startTime);
   }
 
   /**
@@ -557,7 +457,7 @@ export class SidVoice {
    * @param startTime
    */
   c64Rng(value: number, startTime: number = this._audioContext.currentTime) {
-    this.rng(Boolean(value), startTime);
+    this._rngParameter.setValueAtTime(value, startTime);
   }
   /**
    *
@@ -565,9 +465,7 @@ export class SidVoice {
    * @param startTime
    */
   rng(value: boolean, startTime: number = this._audioContext.currentTime) {
-    this._triangleOsc.rng.setValueAtTime(value, startTime);
-    this._sawtoothOsc.rng.setValueAtTime(value, startTime);
-    this._pulseOsc.rng.setValueAtTime(value, startTime);
+    this.c64Rng(Number(value), startTime);
   }
 
   start(startTime: number = this._audioContext.currentTime) {
@@ -611,6 +509,18 @@ export class SidVoice {
   }
 
   reset(startTime: number = this._audioContext.currentTime) {
+    this._adsrGain.gain.cancelScheduledValues(startTime);
+    this._adsrGain.gain.setValueAtTime(0, startTime);
+    this._waveformParameter.cancelScheduledValues(startTime);
+    this._waveformParameter.setValueAtTime(0, startTime);
+    this._frequencyParameter.cancelScheduledValues(startTime);
+    this._frequencyParameter.setValueAtTime(0, startTime);
+    this._widthParameter.cancelScheduledValues(startTime);
+    this._widthParameter.setValueAtTime(0.5, startTime);
+    this._syncParameter.cancelScheduledValues(startTime);
+    this._syncParameter.setValueAtTime(0, startTime);
+    this._rngParameter.cancelScheduledValues(startTime);
+    this._rngParameter.setValueAtTime(0, startTime);
     this._attackDurationParameter.cancelScheduledValues(startTime);
     this._attackDurationParameter.setValueAtTime(0.002, startTime);
     this._decayDurationParameter.cancelScheduledValues(startTime);
@@ -621,14 +531,6 @@ export class SidVoice {
     this._releaseDurationParameter.setValueAtTime(0.006, startTime);
     this._adsrGainParameter.cancelScheduledValues(startTime);
     this._adsrGainParameter.setValueAtTime(0, startTime);
-    this._triangleOsc.reset(startTime);
-    this._sawtoothOsc.reset(startTime);
-    this._pulseOsc.reset(startTime);
-    this._noiseOsc.reset(startTime);
-    this._activeWaveforms.cancelScheduledValues(startTime);
-    this._activeWaveforms.setValueAtTime([], startTime);
-    this._adsrGain.gain.cancelScheduledValues(startTime);
-    this._adsrGain.gain.setValueAtTime(0, startTime);
   }
 }
 
@@ -946,6 +848,7 @@ export class SidFilter {
 export class Sid {
   private _audioContext: AudioContext;
   private _mainGain: GainNode;
+  private _oscillator: SidOscillator;
   private _voice1: SidVoice;
   private _voice2: SidVoice;
   private _voice3: SidVoice;
@@ -965,18 +868,10 @@ export class Sid {
   constructor(audioContext: AudioContext = new AudioContext()) {
     this._audioContext = audioContext;
     this._mainGain = new GainNode(audioContext, { gain: 1 });
-    this._voice1 = new SidVoice(audioContext, () => ({
-      frequency: this._voice3.syncFrequency,
-      offset: this._voice3.syncOffset,
-    }));
-    this._voice2 = new SidVoice(audioContext, () => ({
-      frequency: this._voice1.syncFrequency,
-      offset: this._voice1.syncOffset,
-    }));
-    this._voice3 = new SidVoice(audioContext, () => ({
-      frequency: this._voice2.syncFrequency,
-      offset: this._voice2.syncOffset,
-    }));
+    this._oscillator = new SidOscillator(audioContext);
+    this._voice1 = new SidVoice(audioContext, this._oscillator.voice1Params);
+    this._voice2 = new SidVoice(audioContext, this._oscillator.voice2Params);
+    this._voice3 = new SidVoice(audioContext, this._oscillator.voice3Params);
     this._filter = new SidFilter(audioContext);
 
     this._v1_gain = new GainNode(audioContext, { gain: 1 / 3 });
@@ -990,16 +885,19 @@ export class Sid {
     this._v3_filter = new GainNode(audioContext, { gain: 0 });
     this._v3_main = new GainNode(audioContext, { gain: 1 });
 
+    this._oscillator.connect(this._voice1.inNode, 0);
     this._voice1.connect(this._v1_gain);
     this._v1_gain.connect(this._v1_filter);
     this._v1_filter.connect(this._filter.inNode);
     this._v1_gain.connect(this._v1_main);
     this._v1_main.connect(this._mainGain);
+    this._oscillator.connect(this._voice2.inNode, 1);
     this._voice2.connect(this._v2_gain);
     this._v2_gain.connect(this._v2_filter);
     this._v2_filter.connect(this._filter.inNode);
     this._v2_gain.connect(this._v2_main);
     this._v2_main.connect(this._mainGain);
+    this._oscillator.connect(this._voice3.inNode, 2);
     this._voice3.connect(this._v3_switch);
     this._v3_switch.connect(this._v3_gain);
     this._v3_gain.connect(this._v3_filter);
@@ -1007,7 +905,6 @@ export class Sid {
     this._v3_gain.connect(this._v3_main);
     this._v3_main.connect(this._mainGain);
     this._filter.connect(this._mainGain);
-    this._mainGain.connect(audioContext.destination);
   }
 
   start(): Promise<void> {
@@ -1083,6 +980,14 @@ export class Sid {
   }
   volume(value: number, startTime: number = this._audioContext.currentTime) {
     this._mainGain.gain.setValueAtTime(value, startTime);
+  }
+
+  connect(destination: AudioNode, output?: number, input?: number) {
+    this._mainGain.connect(destination, output, input);
+  }
+
+  disconnect() {
+    this._mainGain.disconnect();
   }
 
   reset(startTime: number = this._audioContext.currentTime) {

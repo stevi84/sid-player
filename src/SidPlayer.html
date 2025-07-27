@@ -180,16 +180,19 @@
         </div>
       </div>
       <div class="text">
-        <p id="line0">Choose a SID file</p>
+        <p id="line0">Select a SID file</p>
         <p id="line1"></p>
         <p id="line2"></p>
         <p id="line3"></p>
         <p id="line4"></p>
       </div>
       <div class="control">
-        <label for="fileSelect">Choose a SID file:</label>
-        <select id="fileSelect" autocomplete="off">
-          <option value="">--Select a song--</option>
+        <select id="channelSelect" autocomplete="off">
+          <option value="left">Mono/Stereo-L</option>
+          <option value="right">Stereo-R</option>
+        </select>
+        <select id="leftFileSelect" autocomplete="off">
+          <option value="">--Select a SID file--</option>
           <option value="ACCORDIAN">ACCORDIAN</option>
           <option value="ALBUMLEAF">ALBUMLEAF</option>
           <option value="AXELF-L">AXELF-L</option>
@@ -223,7 +226,14 @@
           <option value="YOY">YOY</option>
           <option value="ZORRO">ZORRO</option>
         </select>
-        <input type="file" id="openFile" accept=".prg,.mus" autocomplete="off" />
+        <input id="leftOpenFile" type="file" accept=".prg,.mus" autocomplete="off" />
+        <button id="leftClear" class="clearButton">X</button>
+        <select id="rightFileSelect" autocomplete="off">
+          <option value="">--Select a SID file--</option>
+          <option value="AXELF-R">AXELF-R</option>
+        </select>
+        <input id="rightOpenFile" type="file" accept=".prg,.mus" autocomplete="off" />
+        <button id="rightClear" class="clearButton"></button>
         <button id="playPause" class="playPauseButton" disabled="true" autocomplete="off"></button>
         <span id="current"></span>
         <input
