@@ -212,12 +212,12 @@ export class CustomGenericAudioParam<T> {
 }
 
 type VoiceParams = {
-  waveform: AudioParam,
-  frequency: AudioParam,
-  width: AudioParam,
-  sync: AudioParam,
-  rng: AudioParam,
-}
+  waveform: AudioParam;
+  frequency: AudioParam;
+  width: AudioParam;
+  sync: AudioParam;
+  rng: AudioParam;
+};
 
 export class SidOscillator {
   private _audioContext: AudioContext;
@@ -240,19 +240,19 @@ export class SidOscillator {
       width: this._oscillator.parameters.get('voice1Width')!,
       sync: this._oscillator.parameters.get('voice1Sync')!,
       rng: this._oscillator.parameters.get('voice1Rng')!,
-    }
+    };
   }
 
   get voice2Params(): VoiceParams {
     return {
-      waveform: this._oscillator.parameters.get('voice2Waveform') !,
-      frequency: this._oscillator.parameters.get('voice2Frequency') !,
-      width: this._oscillator.parameters.get('voice2Width') !,
-      sync: this._oscillator.parameters.get('voice2Sync') !,
-      rng: this._oscillator.parameters.get('voice2Rng') !,
-    }
+      waveform: this._oscillator.parameters.get('voice2Waveform')!,
+      frequency: this._oscillator.parameters.get('voice2Frequency')!,
+      width: this._oscillator.parameters.get('voice2Width')!,
+      sync: this._oscillator.parameters.get('voice2Sync')!,
+      rng: this._oscillator.parameters.get('voice2Rng')!,
+    };
   }
-  
+
   get voice3Params(): VoiceParams {
     return {
       waveform: this._oscillator.parameters.get('voice3Waveform')!,
@@ -260,7 +260,7 @@ export class SidOscillator {
       width: this._oscillator.parameters.get('voice3Width')!,
       sync: this._oscillator.parameters.get('voice3Sync')!,
       rng: this._oscillator.parameters.get('voice3Rng')!,
-    }
+    };
   }
 
   connect(destination: AudioNode, output: number, input?: number) {
@@ -306,11 +306,11 @@ export class SidVoice {
   get inNode(): GainNode {
     return this._adsrGain;
   }
-  
+
   get frequencyParam(): AudioParam {
     return this._frequencyParameter;
   }
-  
+
   get widthParam(): AudioParam {
     return this._widthParameter;
   }
@@ -341,7 +341,11 @@ export class SidVoice {
     this._waveformParameter.setValueAtTime(value, startTime);
   }
   waveform(value: Waveform[], startTime: number = this._audioContext.currentTime) {
-    const waveforms: number = (value.includes('triangle') ? 1 : 0) + (value.includes('sawtooth') ? 2 : 0) + (value.includes('pulse') ? 4 : 0) + (value.includes('noise') ? 8 : 0);
+    const waveforms: number =
+      (value.includes('triangle') ? 1 : 0) +
+      (value.includes('sawtooth') ? 2 : 0) +
+      (value.includes('pulse') ? 4 : 0) +
+      (value.includes('noise') ? 8 : 0);
     this.c64Waveform(waveforms, startTime);
   }
 

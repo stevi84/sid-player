@@ -121,7 +121,7 @@ body {
   background: white;
   font-size: 1em;
 }
-#rightFileSelect, #rightFile, #rightClear {
+#rightFileSelect, #rightOpenFile, #rightClear {
   display: none;
 }
 /* https://css-tricks.com/making-pure-css-playpause-button/ */

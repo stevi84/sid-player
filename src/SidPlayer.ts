@@ -18,19 +18,19 @@ const timeSlider = document.getElementById('timeslider') as HTMLInputElement;
 const durationSpan = document.getElementById('duration') as HTMLSpanElement;
 
 type State = {
-  selectedChannel: Channel,
-  isLoading: boolean,
-  isPlaying: boolean,
-  durationLeft: number,
-  voicesDataLeft: Command[][],
-  durationRight: number,
-  voicesDataRight: Command[][],
-  notes: NoteViz[][],
-  currentNotes: number[],
-  text: string[],
-  startTime: number,
-  currentTime: number,
-  audioContextStartTime: number,
+  selectedChannel: Channel;
+  isLoading: boolean;
+  isPlaying: boolean;
+  durationLeft: number;
+  voicesDataLeft: Command[][];
+  durationRight: number;
+  voicesDataRight: Command[][];
+  notes: NoteViz[][];
+  currentNotes: number[];
+  text: string[];
+  startTime: number;
+  currentTime: number;
+  audioContextStartTime: number;
 };
 const internalState: State = {
   selectedChannel: 'left',
@@ -59,11 +59,13 @@ const handler: ProxyHandler<State> = {
     if (['selectedChannel'].includes(property)) {
       updateUiFileSelects();
     }
-    if (['isLoading', 'isPlaying', 'durationLeft', 'voicesDataLeft', 'durationRight', 'currentTime'].includes(property)) {
+    if (
+      ['isLoading', 'isPlaying', 'durationLeft', 'voicesDataLeft', 'durationRight', 'currentTime'].includes(property)
+    ) {
       updateUiPlayArea();
     }
     return true;
-  }
+  },
 };
 export const state: State = new Proxy(internalState, handler);
 
@@ -78,29 +80,27 @@ const getTimeString = (value: number): string => {
 const updateUiKeyboard = () => {
   for (let i = 0; i < 6; i++) {
     if (state.notes[i].length !== 0) {
-      if (state.currentNotes[i] > 0) {
-        const currentTime = audioContext.currentTime;
-        const note = state.notes[i][state.currentNotes[i]];
-        if (currentTime < note.start || currentTime >= note.stop) {
-          clearKeyColor(note.index);
-          let index: number = -1;
-          for (let j = 0; j < state.notes[i].length; j++) {
-            if (currentTime >= state.notes[i][j].start && currentTime < state.notes[i][j].stop) {
-              index = j;
-              break;
-            }
+      const currentTime = audioContext.currentTime;
+      const note: NoteViz | undefined = state.currentNotes[i] >= 0 ? state.notes[i][state.currentNotes[i]] : undefined;
+      if (!note || currentTime < note.start || currentTime >= note.stop) {
+        clearKeyColor(note && note.index || -1);
+        let index: number = -1;
+        for (let j = 0; j < state.notes[i].length; j++) {
+          if (currentTime >= state.notes[i][j].start && currentTime < state.notes[i][j].stop) {
+            index = j;
+            break;
           }
-          internalState.currentNotes[i] = index;
-          if (index > 0) setKeyColor(state.notes[i][index].index, i);
         }
+        internalState.currentNotes[i] = index;
+        if (index > 0) setKeyColor(state.notes[i][index].index, i);
       }
     }
   }
-}
+};
 const updateUiText = () => {
   for (let i = 0; i < state.text.length; i++) textLines[i].textContent = state.text[i];
   for (let i = state.text.length; i < 5; i++) textLines[i].textContent = '';
-}
+};
 const updateUiFileSelects = () => {
   leftFileSelect.style.display = state.selectedChannel === 'right' ? 'none' : 'revert';
   leftOpenFileInput.style.display = state.selectedChannel === 'right' ? 'none' : 'revert';
@@ -108,16 +108,16 @@ const updateUiFileSelects = () => {
   rightFileSelect.style.display = state.selectedChannel === 'right' ? 'revert' : 'none';
   rightOpenFileInput.style.display = state.selectedChannel === 'right' ? 'revert' : 'none';
   rightClearButton.style.display = state.selectedChannel === 'right' ? 'revert' : 'none';
-}
+};
 const updateUiPlayArea = () => {
   playPauseButton.disabled = state.voicesDataLeft.length === 0 || state.isLoading;
-  state.isPlaying ? playPauseButton.classList.add('paused') : playPauseButton.classList.remove('paused');;
+  state.isPlaying ? playPauseButton.classList.add('paused') : playPauseButton.classList.remove('paused');
   currentSpan.textContent = getTimeString(state.currentTime);
   timeSlider.disabled = state.voicesDataLeft.length === 0 || state.isLoading;
   timeSlider.max = String(getDuration());
   timeSlider.value = String(state.currentTime);
   durationSpan.textContent = getTimeString(getDuration());
-}
+};
 
 const loadSidFile = async (channel: Channel, file: Blob) => {
   pause();
@@ -151,7 +151,7 @@ const clear = (channel: Channel) => {
     state.durationRight = 0;
     state.voicesDataRight = [];
     state.notes = [state.notes[0], state.notes[1], state.notes[2], [], [], []];
-    state.currentNotes = [state.currentNotes[0], state.currentNotes[1], state.currentNotes[2], -1, -1, -1]
+    state.currentNotes = [state.currentNotes[0], state.currentNotes[1], state.currentNotes[2], -1, -1, -1];
   } else {
     state.durationLeft = 0;
     state.voicesDataLeft = [];
@@ -162,7 +162,7 @@ const clear = (channel: Channel) => {
   state.startTime = 0;
   state.currentTime = 0;
   state.audioContextStartTime = audioContext.currentTime;
-}
+};
 
 channelSelect.onchange = (e: Event) => {
   state.selectedChannel = (e.target as HTMLSelectElement).value as Channel;
@@ -203,20 +203,28 @@ rightFileSelect.onchange = async (e: Event) => {
 };
 leftClearButton.onclick = () => {
   clear('left');
-}
+};
 rightClearButton.onclick = () => {
   clear('right');
   connectMono();
-}
+};
 
 const clearKeyColor = (index: number) => {
+  if (index < 0 || index >= keyDivs.length) return;
   const color = [0, 2, 4, 5, 7, 9, 11].includes(index % 12)
     ? 'linear-gradient(to bottom, #fff, #e0e0e0)'
     : 'linear-gradient(to bottom, #222, #000)';
   keyDivs[index].style.background = color;
 };
 // TODO rechte Farben anpassen
-const colorMap: { [key: number]: string } = { 0: '#EEEE77', 1: '#664400', 2: '#CC44CC', 3: '#EEEE77', 4: '#664400', 5: '#CC44CC' };
+const colorMap: { [key: number]: string } = {
+  0: '#EEEE77',
+  1: '#664400',
+  2: '#CC44CC',
+  3: '#EEEE77',
+  4: '#664400',
+  5: '#CC44CC',
+};
 const setKeyColor = (index: number, voice: number) => {
   keyDivs[index].style.background = colorMap[voice];
 };
@@ -254,13 +262,13 @@ const reloadSidFiles = (e: MouseEvent | TouchEvent) => {
   state.currentTime = Number(e.target.value);
   state.audioContextStartTime = audioContext.currentTime;
   state.isLoading = false;
-}
+};
 timeSlider.onmousedown = (e: MouseEvent) => {
   pause();
-}
+};
 timeSlider.ontouchstart = (e: TouchEvent) => {
   pause();
-}
+};
 timeSlider.oninput = (e: Event) => {
   // @ts-ignore
   state.currentTime = Number(e.target.value);
@@ -268,11 +276,11 @@ timeSlider.oninput = (e: Event) => {
 timeSlider.onmouseup = (e: MouseEvent) => {
   reloadSidFiles(e);
   if (state.isPlaying) play();
-}
+};
 timeSlider.ontouchend = (e: TouchEvent) => {
   reloadSidFiles(e);
   if (state.isPlaying) play();
-}
+};
 
 let updateKeyboardInterval: number | undefined;
 const updateKeyboard = () => {

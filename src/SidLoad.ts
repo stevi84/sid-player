@@ -14,7 +14,7 @@ import {
 import { Command, Dotted, Duration, Modifier, Note, Octave, parseSid } from './SidParse';
 
 export const audioContext = new AudioContext();
-await audioContext.audioWorklet.addModule("C64SidProcessor.js");
+await audioContext.audioWorklet.addModule('C64SidProcessor.js');
 await audioContext.suspend();
 
 // check for cancelAndHoldAtTime, not implemented in Mozilla Firefox
@@ -38,13 +38,13 @@ export const connectMono = () => {
   sidLeft.connect(audioContext.destination);
   sidRight.disconnect();
   merger.disconnect();
-}
+};
 
 export const connectStereo = () => {
   sidLeft.connect(merger, 0, 0);
   sidRight.connect(merger, 0, 1);
   merger.connect(audioContext.destination);
-}
+};
 
 const calcFrequency = (
   note: Note,
@@ -169,16 +169,10 @@ const setFrequencyPortamentoVibrato = (
         }
       } else {
         if (up) {
-          voice.frequencyParam.linearRampToValueAtTime(
-            frequency + vibRate * (duration - time),
-            startTime + duration
-          );
+          voice.frequencyParam.linearRampToValueAtTime(frequency + vibRate * (duration - time), startTime + duration);
           voice.frequency(frequency + vibRate * (duration - time), startTime + time);
         } else {
-          voice.frequencyParam.linearRampToValueAtTime(
-            upperFreq - vibRate * (duration - time),
-            startTime + duration
-          );
+          voice.frequencyParam.linearRampToValueAtTime(upperFreq - vibRate * (duration - time), startTime + duration);
           voice.frequency(upperFreq - vibRate * (duration - time), startTime + time);
         }
         time = duration;
@@ -211,10 +205,7 @@ const setPulseWidthSweep = (
       voice.widthParam.linearRampToValueAtTime(0, startTime + time);
       voice.widthParam.setValueAtTime(1, startTime + time);
     } else {
-      voice.widthParam.linearRampToValueAtTime(
-        (value + rate * (duration - time)) / 4095,
-        startTime + duration
-      );
+      voice.widthParam.linearRampToValueAtTime((value + rate * (duration - time)) / 4095, startTime + duration);
       time = duration;
     }
   } while (time < duration);
@@ -239,7 +230,13 @@ const getFilterSweepValues = (
   return values;
 };
 
-const setFilterFrequencyWidthSweep = (filter: SidFilter, startTime: number, startValue: number, sweepRate: number, duration: number) => {
+const setFilterFrequencyWidthSweep = (
+  filter: SidFilter,
+  startTime: number,
+  startValue: number,
+  sweepRate: number,
+  duration: number
+) => {
   const rate = sweepRate * 60;
   let time = 0;
   let value = startValue;
@@ -346,10 +343,14 @@ type CommandPointer = { voice: number; index: number };
 type PhraseDefinition = { index: number; pointer: CommandPointer };
 export type NoteViz = { start: number; stop: number; index: number };
 
-const loadVoices = (sid: SidClass, voicesData: Command[][], startTime: number): { duration: number, notes: NoteViz[][]} => {
+const loadVoices = (
+  sid: SidClass,
+  voicesData: Command[][],
+  startTime: number
+): { duration: number; notes: NoteViz[][] } => {
   const voices = sid.voices;
   initVoices(sid);
-  
+
   const notes: NoteViz[][] = [[], [], []];
 
   const currentTime = audioContext.currentTime;
@@ -589,7 +590,13 @@ const loadVoices = (sid: SidClass, voicesData: Command[][], startTime: number): 
             if (autoFilter !== 0)
               filterFrequency = setAutoFilterFrequency(sid.filter, time - startTime, noteFrequency, autoFilter, filter);
             if (filterFrequencySweepRate !== 0)
-              setFilterFrequencyWidthSweep(sid.filter, time - startTime, filterFrequency, filterFrequencySweepRate, duration);
+              setFilterFrequencyWidthSweep(
+                sid.filter,
+                time - startTime,
+                filterFrequency,
+                filterFrequencySweepRate,
+                duration
+              );
             if (!tie) voices[voiceIndex].start(time - startTime);
             tie = cmd.data.tie;
             if (!tie) voices[voiceIndex].stop(time - startTime + Math.max(duration - releasePoint / 60, 0));
@@ -651,13 +658,20 @@ const loadVoices = (sid: SidClass, voicesData: Command[][], startTime: number): 
 
 export type Channel = 'left' | 'right';
 
-export const loadFile = async (channel: Channel, file: Blob): Promise<{ voicesData: Command[][]; duration: number; text: string[], notes: NoteViz[][] }> => {
+export const loadFile = async (
+  channel: Channel,
+  file: Blob
+): Promise<{ voicesData: Command[][]; duration: number; text: string[]; notes: NoteViz[][] }> => {
   const sidData = await parseSid(file);
   const { duration, notes } = reloadVoices(channel, sidData.voices, 0);
   return { voicesData: sidData.voices, duration, text: sidData.text, notes };
 };
 
-export const reloadVoices = (channel: Channel, voicesData: Command[][], startTime: number): { duration: number, notes: NoteViz[][] } => {
+export const reloadVoices = (
+  channel: Channel,
+  voicesData: Command[][],
+  startTime: number
+): { duration: number; notes: NoteViz[][] } => {
   const sid = channel === 'right' ? sidRight : sidLeft;
   sid.reset(0);
   // logVoices(voicesData);
