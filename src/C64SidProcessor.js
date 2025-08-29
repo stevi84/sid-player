@@ -160,7 +160,14 @@ class C64SidProcessor extends AudioWorkletProcessor {
       const voice1SawtoothValue = 2 * this.#voice1Phase - 1;
       const voice1PulseValue = this.#voice1Phase < voice1Width ? -1 : 1;
       const voice1NoiseValue = this.#voice1Value;
-      outputList[0][0][i] = voice1PhasePerSample !== 0 ? (voice1Triangle*voice1TriangleValue + voice1Sawtooth*voice1SawtoothValue + voice1Pulse*voice1PulseValue + voice1Noise*voice1NoiseValue)/voice1Waveforms : 0;
+      outputList[0][0][i] =
+        voice1PhasePerSample !== 0
+          ? (voice1Triangle * voice1TriangleValue +
+              voice1Sawtooth * voice1SawtoothValue +
+              voice1Pulse * voice1PulseValue +
+              voice1Noise * voice1NoiseValue) /
+            voice1Waveforms
+          : 0;
       // http://www.sidmusic.org/sid/sidtech5.html
       // phasePerSample*985248.6/0x100000/FREQUENCY_FACTOR
       this.#voice1Phase2 += 16 * voice1PhasePerSample;
@@ -180,7 +187,14 @@ class C64SidProcessor extends AudioWorkletProcessor {
       const voice2SawtoothValue = 2 * this.#voice2Phase - 1;
       const voice2PulseValue = this.#voice2Phase < voice2Width ? -1 : 1;
       const voice2NoiseValue = this.#voice2Value;
-      outputList[1][0][i] = voice2PhasePerSample !== 0 ? (voice2Triangle*voice2TriangleValue + voice2Sawtooth*voice2SawtoothValue + voice2Pulse*voice2PulseValue + voice2Noise*voice2NoiseValue)/voice2Waveforms : 0;
+      outputList[1][0][i] =
+        voice2PhasePerSample !== 0
+          ? (voice2Triangle * voice2TriangleValue +
+              voice2Sawtooth * voice2SawtoothValue +
+              voice2Pulse * voice2PulseValue +
+              voice2Noise * voice2NoiseValue) /
+            voice2Waveforms
+          : 0;
       this.#voice2Phase2 += 16 * voice2PhasePerSample;
       if (this.#voice2Phase2 >= 1) {
         this.#voice2Phase2 -= Math.floor(this.#voice2Phase2);
@@ -198,7 +212,14 @@ class C64SidProcessor extends AudioWorkletProcessor {
       const voice3SawtoothValue = 2 * this.#voice3Phase - 1;
       const voice3PulseValue = this.#voice3Phase < voice3Width ? -1 : 1;
       const voice3NoiseValue = this.#voice3Value;
-      outputList[2][0][i] = voice3PhasePerSample !== 0 ? (voice3Triangle*voice3TriangleValue + voice3Sawtooth*voice3SawtoothValue + voice3Pulse*voice3PulseValue + voice3Noise*voice3NoiseValue)/voice3Waveforms : 0;
+      outputList[2][0][i] =
+        voice3PhasePerSample !== 0
+          ? (voice3Triangle * voice3TriangleValue +
+              voice3Sawtooth * voice3SawtoothValue +
+              voice3Pulse * voice3PulseValue +
+              voice3Noise * voice3NoiseValue) /
+            voice3Waveforms
+          : 0;
       this.#voice3Phase2 += 16 * voice3PhasePerSample;
       if (this.#voice3Phase2 >= 1) {
         this.#voice3Phase2 -= Math.floor(this.#voice3Phase2);
