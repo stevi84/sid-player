@@ -241,6 +241,11 @@ class C64SidProcessor extends AudioWorkletProcessor {
       // Farben für rechten Kanal ändern
       // Farbbefehle im Infotext z.B. "\CGSC_v146\CGSC\Diz_Cop\Old_Man.mus"
       // Clear-Button Fileselects leeren, clear Keys
+      // File, Control Bereiche trennen, Play Button nach rechts
+      // Spulen, Anzeige von Noten (auch beim Spulen) reparieren
+      // Beim Neu laden die Noten löschen, clear aufrufen?
+      // wie werde ich bei google gefunden
+      // system schaubild aktualisieren
     }
 
     return true;
