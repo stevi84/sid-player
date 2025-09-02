@@ -603,8 +603,8 @@ const loadVoices = (
             // fill notes for display during playback
             if (noteIndex >= 0 && noteIndex <= 95)
               notes[voiceIndex].push({
-                start: time - startTime,
-                stop: time - startTime + Math.max(duration - releasePoint / 60, 0),
+                start: time - currentTime,
+                stop: time - currentTime + Math.max(duration - releasePoint / 60, 0),
                 index: noteIndex,
               });
           }
@@ -661,7 +661,7 @@ export type Channel = 'left' | 'right';
 export const loadFile = async (
   channel: Channel,
   file: Blob
-): Promise<{ voicesData: Command[][]; duration: number; text: string[]; notes: NoteViz[][] }> => {
+): Promise<{ voicesData: Command[][]; duration: number; text: number[]; notes: NoteViz[][] }> => {
   const sidData = await parseSid(file);
   const { duration, notes } = reloadVoices(channel, sidData.voices, 0);
   return { voicesData: sidData.voices, duration, text: sidData.text, notes };

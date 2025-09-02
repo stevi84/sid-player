@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
     <title>SidPlayer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Mono&display=swap" rel="stylesheet">
     <link href="SidPlayer.css" rel="stylesheet" />
   </head>
   <body>
@@ -179,8 +182,8 @@
           </div>
         </div>
       </div>
-      <div class="text">
-        <p id="line0">Select a SID file</p>
+      <div class="text monospace">
+        <p id="line0"><span style="color: rgb(0,0,0); background-color: rgb(255,255,255);">SELECT A SID FILE</span></p>
         <p id="line1"></p>
         <p id="line2"></p>
         <p id="line3"></p>
@@ -192,7 +195,7 @@
           <option value="right">Stereo-R</option>
         </select>
         <select id="leftFileSelect" autocomplete="off">
-          <option value="">--Select a SID file--</option>
+          <option value="">--SELECT A SID FILE--</option>
           <option value="ACCORDIAN">ACCORDIAN</option>
           <option value="ALBUMLEAF">ALBUMLEAF</option>
           <option value="AXELF-L">AXELF-L</option>
@@ -229,12 +232,13 @@
         <input id="leftOpenFile" type="file" accept=".prg,.mus" autocomplete="off" />
         <button id="leftClear" class="clearButton">X</button>
         <select id="rightFileSelect" autocomplete="off">
-          <option value="">--Select a SID file--</option>
+          <option value="">--SELECT A SID FILE--</option>
           <option value="AXELF-R">AXELF-R</option>
         </select>
         <input id="rightOpenFile" type="file" accept=".prg,.mus" autocomplete="off" />
         <button id="rightClear" class="clearButton">X</button>
-        <button id="playPause" class="playPauseButton" disabled="true" autocomplete="off"></button>
+      </div>
+      <div class="control">
         <span id="current">00:00</span>
         <input
           type="range"
@@ -248,6 +252,7 @@
           autocomplete="off"
         />
         <span id="duration">00:00</span>
+        <button id="playPause" class="playPauseButton" disabled="true" autocomplete="off"></button>
       </div>
     </div>
     <script defer src="sidplayer.bundle.js"></script>

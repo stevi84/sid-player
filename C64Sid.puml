@@ -3,116 +3,62 @@
 title C64Sid
 
 package Sid {
+  package AudioWorklet {
+    package Voice1 as Voice1SidProcessor {
+      [NoiseOscillator] as Voice1NoiseOscillator #LightGreen
+      [PulseOscillator] as Voice1PulseOscillator #LightGreen
+      [SawtoothOscillator] as Voice1SawtoothOscillator #LightGreen
+      [TriangleOscillator] as Voice1TriangleOscillator #LightGreen
+      [Average] as Voice1Average
+
+      Voice1NoiseOscillator --> Voice1Average
+      Voice1PulseOscillator --> Voice1Average
+      Voice1SawtoothOscillator --> Voice1Average
+      Voice1TriangleOscillator --> Voice1Average
+    }
+
+    package Voice2 as Voice2SidProcessor {
+      [NoiseOscillator] as Voice2NoiseOscillator #LightGreen
+      [PulseOscillator] as Voice2PulseOscillator #LightGreen
+      [SawtoothOscillator] as Voice2SawtoothOscillator #LightGreen
+      [TriangleOscillator] as Voice2TriangleOscillator #LightGreen
+      [Average] as Voice2Average
+
+      Voice2NoiseOscillator --> Voice2Average
+      Voice2PulseOscillator --> Voice2Average
+      Voice2SawtoothOscillator --> Voice2Average
+      Voice2TriangleOscillator --> Voice2Average
+    }
+
+    package Voice3 as Voice3SidProcessor {
+      [NoiseOscillator] as Voice3NoiseOscillator #LightGreen
+      [PulseOscillator] as Voice3PulseOscillator #LightGreen
+      [SawtoothOscillator] as Voice3SawtoothOscillator #LightGreen
+      [TriangleOscillator] as Voice3TriangleOscillator #LightGreen
+      [Average] as Voice3Average
+
+      Voice3NoiseOscillator --> Voice3Average
+      Voice3PulseOscillator --> Voice3Average
+      Voice3SawtoothOscillator --> Voice3Average
+      Voice3TriangleOscillator --> Voice3Average
+    }
+  }
+
   package Voice1 {
-    package TriangleOscillator as Voice1TriangleOscillator {
-      [ScriptProcessor] as Voice1TriangleScriptProcessor #LightGreen
-      [_gain\nGainNode\non/off] as Voice1TriangleGainNode
-
-      Voice1TriangleScriptProcessor --> Voice1TriangleGainNode
-    }
-
-    package SawtoothOscillator as Voice1SawtoothOscillator {
-      [ScriptProcessor] as Voice1SawtoothScriptProcessor #LightGreen
-      [_gain\nGainNode\non/off] as Voice1SawtoothGainNode
-
-      Voice1SawtoothScriptProcessor --> Voice1SawtoothGainNode
-    }
-
-    package PulseOscillator as Voice1PulseOscillator {
-      [ScriptProcessor] as Voice1PulseScriptProcessor #LightGreen
-      [_gain\nGainNode\non/off] as Voice1PulseGainNode
-
-      Voice1PulseScriptProcessor --> Voice1PulseGainNode
-    }
-
-    package NoiseOscillator as Voice1NoiseOscillator {
-      [ScriptProcessor] as Voice1NoiseScriptProcessor #LightGreen
-      [_gain\nGainNode\non/off] as Voice1NoiseGainNode
-
-      Voice1NoiseScriptProcessor --> Voice1NoiseGainNode
-    }
-
     [_adsrGain\nGainNode\nEnvelope] as Voice1AdsrGain #LightGoldenRodYellow
-
-    Voice1TriangleGainNode --> Voice1AdsrGain
-    Voice1SawtoothGainNode --> Voice1AdsrGain
-    Voice1PulseGainNode --> Voice1AdsrGain
-    Voice1NoiseGainNode --> Voice1AdsrGain
   }
-
+  
   package Voice2 {
-    package TriangleOscillator as Voice2TriangleOscillator {
-      [ScriptProcessor] as Voice2TriangleScriptProcessor #LightGreen
-      [_gain\nGainNode\non/off] as Voice2TriangleGainNode
-
-      Voice2TriangleScriptProcessor --> Voice2TriangleGainNode
-    }
-
-    package SawtoothOscillator as Voice2SawtoothOscillator {
-      [ScriptProcessor] as Voice2SawtoothScriptProcessor #LightGreen
-      [_gain\nGainNode\non/off] as Voice2SawtoothGainNode
-
-      Voice2SawtoothScriptProcessor --> Voice2SawtoothGainNode
-    }
-
-    package PulseOscillator as Voice2PulseOscillator {
-      [ScriptProcessor] as Voice2PulseScriptProcessor #LightGreen
-      [_gain\nGainNode\non/off] as Voice2PulseGainNode
-
-      Voice2PulseScriptProcessor --> Voice2PulseGainNode
-    }
-
-    package NoiseOscillator as Voice2NoiseOscillator {
-      [ScriptProcessor] as Voice2NoiseScriptProcessor #LightGreen
-      [_gain\nGainNode\non/off] as Voice2NoiseGainNode
-
-      Voice2NoiseScriptProcessor --> Voice2NoiseGainNode
-    }
-
     [_adsrGain\nGainNode\nEnvelope] as Voice2AdsrGain #LightGoldenRodYellow
-
-    Voice2TriangleGainNode --> Voice2AdsrGain
-    Voice2SawtoothGainNode --> Voice2AdsrGain
-    Voice2PulseGainNode --> Voice2AdsrGain
-    Voice2NoiseGainNode --> Voice2AdsrGain
   }
-
+  
   package Voice3 {
-    package TriangleOscillator as Voice3TriangleOscillator {
-      [ScriptProcessor] as Voice3TriangleScriptProcessor #LightGreen
-      [_gain\nGainNode\non/off] as Voice3TriangleGainNode
-
-      Voice3TriangleScriptProcessor --> Voice3TriangleGainNode
-    }
-
-    package SawtoothOscillator as Voice3SawtoothOscillator {
-      [ScriptProcessor] as Voice3SawtoothScriptProcessor #LightGreen
-      [_gain\nGainNode\non/off] as Voice3SawtoothGainNode
-
-      Voice3SawtoothScriptProcessor --> Voice3SawtoothGainNode
-    }
-
-    package PulseOscillator as Voice3PulseOscillator {
-      [ScriptProcessor] as Voice3PulseScriptProcessor #LightGreen
-      [_gain\nGainNode\non/off] as Voice3PulseGainNode
-
-      Voice3PulseScriptProcessor --> Voice3PulseGainNode
-    }
-
-    package NoiseOscillator as Voice3NoiseOscillator {
-      [ScriptProcessor] as Voice3NoiseScriptProcessor #LightGreen
-      [_gain\nGainNode\non/off] as Voice3NoiseGainNode
-
-      Voice3NoiseScriptProcessor --> Voice3NoiseGainNode
-    }
-
     [_adsrGain\nGainNode\nEnvelope] as Voice3AdsrGain #LightGoldenRodYellow
-
-    Voice3TriangleGainNode --> Voice3AdsrGain
-    Voice3SawtoothGainNode --> Voice3AdsrGain
-    Voice3PulseGainNode --> Voice3AdsrGain
-    Voice3NoiseGainNode --> Voice3AdsrGain
   }
+
+  Voice1Average --> Voice1AdsrGain
+  Voice2Average --> Voice2AdsrGain
+  Voice3Average --> Voice3AdsrGain
 
   package Filter {
     [_inNode\nGainNode] as FilterInNode #LightGoldenRodYellow

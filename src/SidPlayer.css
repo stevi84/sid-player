@@ -103,6 +103,13 @@ body {
     line-height: 1.5;
   }
 }
+.monospace {
+  font-family: "Noto Sans Mono", monospace;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+  font-variation-settings: "wdth" 100;
+}
 .control {
   display: flex;
   align-items: center;
@@ -115,7 +122,8 @@ body {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 #leftFileSelect,
-#rightFileSelect {
+#rightFileSelect,
+#channelSelect {
   padding: 5px 10px;
   border-radius: 6px;
   border: 1px solid #ccc;
@@ -126,6 +134,14 @@ body {
 #rightOpenFile,
 #rightClear {
   display: none;
+}
+.clearButton {
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background: white;
+  font-size: 1em;
+  cursor: pointer;
 }
 /* https://css-tricks.com/making-pure-css-playpause-button/ */
 .playPauseButton {

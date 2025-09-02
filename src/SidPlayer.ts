@@ -1,5 +1,6 @@
+import { colorTable } from './C64CharMap';
 import { audioContext, Channel, connectMono, connectStereo, loadFile, NoteViz, reloadVoices } from './SidLoad';
-import { Command } from './SidParse';
+import { Command, trans } from './SidParse';
 
 const keyDivs: HTMLDivElement[] = [];
 for (let i = 0; i < 96; i++) keyDivs[i] = document.getElementById(`k${i}`) as HTMLDivElement;
@@ -31,7 +32,7 @@ type State = {
   openFileValueRight: string;
   notes: NoteViz[][];
   currentNotes: number[];
-  text: string[];
+  text: number[];
   startTime: number;
   currentTime: number;
   audioContextStartTime: number;
@@ -59,22 +60,16 @@ const handler: ProxyHandler<State> = {
   set(target: State, property: keyof State, value: any) {
     if (property === 'currentNotes') {
       for (let i = 0; i < 6; i++) {
-        if (value[i] === -1)
-          clearKeyColor(
-            target.currentNotes[i] >= 0 && target.notes[i].length > 0
-              ? target.notes[i][target.currentNotes[i]].index
-              : -1
-          );
+        clearKeyColor(
+          target.currentNotes[i] >= 0 && target.notes[i].length > 0 ? target.notes[i][target.currentNotes[i]].index : -1
+        );
       }
     }
     if (property === 'notes') {
       for (let i = 0; i < 6; i++) {
-        if (value[i].length === 0)
-          clearKeyColor(
-            target.currentNotes[i] >= 0 && target.notes[i].length > 0
-              ? target.notes[i][target.currentNotes[i]].index
-              : -1
-          );
+        clearKeyColor(
+          target.currentNotes[i] >= 0 && target.notes[i].length > 0 ? target.notes[i][target.currentNotes[i]].index : -1
+        );
       }
     }
 
@@ -115,10 +110,18 @@ const getTimeString = (value: number): string => {
   return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 };
 
+const getColoredText = (text: string, color: string, reverse: boolean) => {
+  const span = document.createElement('span') as HTMLSpanElement;
+  span.style.color = reverse ? 'rgb(255,255,255)' : color;
+  span.style.backgroundColor = reverse ? color : 'rgb(255,255,255)';
+  span.innerText = text;
+  return span;
+};
+
 const updateUiKeyboard = () => {
   for (let i = 0; i < 6; i++) {
     if (state.notes[i].length !== 0) {
-      const currentTime = audioContext.currentTime;
+      const currentTime = state.currentTime;
       const note: NoteViz | undefined = state.currentNotes[i] >= 0 ? state.notes[i][state.currentNotes[i]] : undefined;
       if (!note || currentTime < note.start || currentTime >= note.stop) {
         clearKeyColor((note && note.index) || -1);
@@ -136,8 +139,138 @@ const updateUiKeyboard = () => {
   }
 };
 const updateUiText = () => {
-  for (let i = 0; i < state.text.length; i++) textLines[i].textContent = state.text[i];
-  for (let i = state.text.length; i < 5; i++) textLines[i].textContent = '';
+  for (let i = 0; i < 5; i++) textLines[i].textContent = '';
+
+  let count: number = 0;
+  let text: string = '';
+  let color: string = colorTable['blk'].rgba();
+  let reverse: boolean = false;
+
+  textLoop: for (const byte of state.text) {
+    switch (byte) {
+      case 0x0:
+        // end of text
+        if (text) textLines[count].append(getColoredText(text, color, reverse));
+        break textLoop;
+      case 0xd:
+        // new line
+        textLines[count].append(getColoredText(text, color, reverse));
+        count++;
+        text = '';
+        break;
+      case 0x5:
+        // wht
+        textLines[count].append(getColoredText(text, color, reverse));
+        text = '';
+        color = colorTable['wht'].rgba();
+        break;
+      case 0x12:
+        // rvsOn
+        textLines[count].append(getColoredText(text, color, reverse));
+        text = '';
+        reverse = true;
+        break;
+      case 0x1c:
+        // red
+        textLines[count].append(getColoredText(text, color, reverse));
+        text = '';
+        color = colorTable['red'].rgba();
+        break;
+      case 0x1e:
+        // grn
+        textLines[count].append(getColoredText(text, color, reverse));
+        text = '';
+        color = colorTable['grn'].rgba();
+        break;
+      case 0x1f:
+        // blu
+        textLines[count].append(getColoredText(text, color, reverse));
+        text = '';
+        color = colorTable['blu'].rgba();
+        break;
+      case 0x81:
+        // orng
+        textLines[count].append(getColoredText(text, color, reverse));
+        text = '';
+        color = colorTable['orng'].rgba();
+        break;
+      case 0x90:
+        // blk
+        textLines[count].append(getColoredText(text, color, reverse));
+        text = '';
+        color = colorTable['blk'].rgba();
+        break;
+      case 0x92:
+        // rvsOff
+        textLines[count].append(getColoredText(text, color, reverse));
+        text = '';
+        reverse = false;
+        break;
+      case 0x95:
+        // brn
+        textLines[count].append(getColoredText(text, color, reverse));
+        text = '';
+        color = colorTable['brn'].rgba();
+        break;
+      case 0x96:
+        // lred
+        textLines[count].append(getColoredText(text, color, reverse));
+        text = '';
+        color = colorTable['lred'].rgba();
+        break;
+      case 0x97:
+        // dgry
+        textLines[count].append(getColoredText(text, color, reverse));
+        text = '';
+        color = colorTable['dgry'].rgba();
+        break;
+      case 0x98:
+        // mgry
+        textLines[count].append(getColoredText(text, color, reverse));
+        text = '';
+        color = colorTable['mgry'].rgba();
+        break;
+      case 0x99:
+        // lgrn
+        textLines[count].append(getColoredText(text, color, reverse));
+        text = '';
+        color = colorTable['lgrn'].rgba();
+        break;
+      case 0x9a:
+        // lblu
+        textLines[count].append(getColoredText(text, color, reverse));
+        text = '';
+        color = colorTable['lblu'].rgba();
+        break;
+      case 0x9b:
+        // lgry
+        textLines[count].append(getColoredText(text, color, reverse));
+        text = '';
+        color = colorTable['lgry'].rgba();
+        break;
+      case 0x9c:
+        // pur
+        textLines[count].append(getColoredText(text, color, reverse));
+        text = '';
+        color = colorTable['pur'].rgba();
+        break;
+      case 0x9e:
+        // yel
+        textLines[count].append(getColoredText(text, color, reverse));
+        text = '';
+        color = colorTable['yel'].rgba();
+        break;
+      case 0x9f:
+        // cyn
+        textLines[count].append(getColoredText(text, color, reverse));
+        text = '';
+        color = colorTable['cyn'].rgba();
+        break;
+      default:
+        text += trans[byte] || '?';
+        break;
+    }
+  }
 };
 const updateUiFileSelects = () => {
   leftFileSelect.style.display = state.selectedChannel === 'right' ? 'none' : 'revert';
@@ -203,7 +336,10 @@ const clear = (channel: Channel) => {
     state.openFileValueLeft = '';
     state.notes = [[], [], [], state.notes[3], state.notes[4], state.notes[5]];
     state.currentNotes = [-1, -1, -1, state.currentNotes[3], state.currentNotes[4], state.currentNotes[5]];
-    state.text = ['Select a SID file'];
+    // SELECT A SID FILE
+    state.text = [
+      0x53, 0x45, 0x4c, 0x45, 0x43, 0x54, 0x20, 0x41, 0x20, 0x53, 0x49, 0x44, 0x20, 0x46, 0x49, 0x4c, 0x45, 0x0,
+    ];
   }
   state.startTime = 0;
   state.currentTime = 0;
@@ -278,7 +414,6 @@ const clearKeyColor = (index: number) => {
     : 'linear-gradient(to bottom, #222, #000)';
   keyDivs[index].style.background = color;
 };
-// TODO rechte Farben anpassen
 const colorMap: { [key: number]: string } = {
   0: '#eeee77ff',
   1: '#664400ff',

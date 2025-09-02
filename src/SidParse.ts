@@ -513,7 +513,7 @@ const getCommand = (byte1: number, byte2: number): Command | undefined => {
   }
 };
 
-const trans: { [key: number]: string } = {
+export const trans: { [key: number]: string } = {
   0x3: 'stop',
   0x5: 'wht',
   0x8: 'shOff',
@@ -758,7 +758,7 @@ const readFileAsArrayBuffer = async (blob: Blob): Promise<ArrayBuffer> =>
     reader.readAsArrayBuffer(blob);
   });
 
-export const parseSid = async (blob: Blob): Promise<{ voices: Command[][]; text: string[] }> => {
+export const parseSid = async (blob: Blob): Promise<{ voices: Command[][]; text: number[] }> => {
   const buffer = new DataView(await readFileAsArrayBuffer(blob));
 
   let i = 0;
@@ -811,19 +811,10 @@ export const parseSid = async (blob: Blob): Promise<{ voices: Command[][]; text:
     voice3.push(cmd);
   }
 
-  const text: string[] = [];
-  let line = '';
+  const text: number[] = [];
   for (let i = textIndex; i < buffer.byteLength; i++) {
     const byte = buffer.getUint8(i);
-    if (byte === 0xd) {
-      text.push(line);
-      line = '';
-    } else if (byte === 0x0) {
-      if (line) text.push(line);
-      break;
-    } else {
-      line += trans[byte] || '?';
-    }
+    text.push(byte);
   }
 
   return { voices: [voice1, voice2, voice3], text };

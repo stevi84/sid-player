@@ -27,7 +27,6 @@ The player uses the Web Audio API for audio processing. The following diagram sh
 
 ### Known Limitations
 
-- Frame drops
 - Advanced Sidplayer features not yet implemented
 - Waveforms were intendedly not exactly copied from the C64
 
