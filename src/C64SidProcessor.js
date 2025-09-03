@@ -230,22 +230,6 @@ class C64SidProcessor extends AudioWorkletProcessor {
         if (voice1Sync) this.#voice1Phase = ((this.#voice3Phase - 1) / voice3PhasePerSample) * voice1PhasePerSample;
         this.#voice3Phase -= Math.floor(this.#voice3Phase);
       }
-
-      // TODO Waveforms kombinieren (AND mit 16/24/32 bit oder Mittelwert von aktiven)
-      // Kombination mit adsrGain multiplizieren
-      // -> voice1Values -> 1 Output-Kanal
-      // Zahl an Output Kanälen festlegen
-      // Außerhalb diesen Prozessor einbauen, Output Kanäle splitten und weiter verarbeiten
-      // 2 dieser Prozessoren für 2 Kanäle (links/rechts), einen standardmäßig verstecken -> dann mono auf beide Kanäle, sonst einer links einer rechts
-
-      // Farben für rechten Kanal ändern
-      // Farbbefehle im Infotext z.B. "\CGSC_v146\CGSC\Diz_Cop\Old_Man.mus"
-      // Clear-Button Fileselects leeren, clear Keys
-      // File, Control Bereiche trennen, Play Button nach rechts
-      // Spulen, Anzeige von Noten (auch beim Spulen) reparieren
-      // Beim Neu laden die Noten löschen, clear aufrufen?
-      // wie werde ich bei google gefunden
-      // system schaubild aktualisieren
     }
 
     return true;

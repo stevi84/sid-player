@@ -2,7 +2,7 @@
 
 title C64Sid
 
-package Sid {
+package SidLeft {
   package AudioWorklet {
     package Voice1 as Voice1SidProcessor {
       [NoiseOscillator] as Voice1NoiseOscillator #LightGreen
@@ -145,8 +145,15 @@ package Sid {
   FilterOutNode --> SidMainGain
 }
 
+package SidRight {
+  [...] as SidRightContent
+}
+
+[ChannelMergerNode] as ChannelMerger #LightGreen
 [audioContext.destination] as Destination #LightPink
 
-SidMainGain --> Destination
+SidMainGain --> ChannelMerger
+SidRightContent --> ChannelMerger
+ChannelMerger --> Destination
 
 @enduml
