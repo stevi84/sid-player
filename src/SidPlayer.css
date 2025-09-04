@@ -121,6 +121,9 @@ body {
   padding: 12px 20px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
+#channelSelect {
+  max-width: 120px;
+}
 #leftFileSelect,
 #rightFileSelect,
 #channelSelect {
@@ -131,9 +134,23 @@ body {
   font-size: 1em;
 }
 #rightFileSelect,
-#rightOpenFile,
+#rightOpenFileLabel,
 #rightClear {
   display: none;
+}
+input[type="file"] {
+  display: none;
+}
+.customOpenFile {
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background: white;
+  font-size: 1em;
+  cursor: pointer;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .clearButton {
   padding: 5px 10px;

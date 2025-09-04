@@ -8,9 +8,11 @@ const textLines: HTMLParagraphElement[] = [];
 for (let i = 0; i < 5; i++) textLines[i] = document.getElementById(`line${i}`) as HTMLParagraphElement;
 const channelSelect = document.getElementById('channelSelect') as HTMLSelectElement;
 const leftFileSelect = document.getElementById('leftFileSelect') as HTMLSelectElement;
+const leftOpenFileLabel = document.getElementById('leftOpenFileLabel') as HTMLLabelElement;
 const leftOpenFileInput = document.getElementById('leftOpenFile') as HTMLInputElement;
 const leftClearButton = document.getElementById('leftClear') as HTMLButtonElement;
 const rightFileSelect = document.getElementById('rightFileSelect') as HTMLSelectElement;
+const rightOpenFileLabel = document.getElementById('rightOpenFileLabel') as HTMLLabelElement;
 const rightOpenFileInput = document.getElementById('rightOpenFile') as HTMLInputElement;
 const rightClearButton = document.getElementById('rightClear') as HTMLButtonElement;
 const playPauseButton = document.getElementById('playPause') as HTMLButtonElement;
@@ -117,6 +119,8 @@ const getColoredText = (text: string, color: string, reverse: boolean) => {
   span.innerText = text;
   return span;
 };
+
+const getFilenameFromString = (path: string): string => path.replace(/^.*[\\/]/, '');
 
 const updateUiKeyboard = () => {
   for (let i = 0; i < 6; i++) {
@@ -275,12 +279,14 @@ const updateUiText = () => {
 const updateUiFileSelects = () => {
   leftFileSelect.style.display = state.selectedChannel === 'right' ? 'none' : 'revert';
   leftFileSelect.value = state.fileSelectValueLeft;
-  leftOpenFileInput.style.display = state.selectedChannel === 'right' ? 'none' : 'revert';
+  leftOpenFileLabel.style.display = state.selectedChannel === 'right' ? 'none' : 'revert';
+  leftOpenFileLabel.textContent = state.openFileValueLeft ? getFilenameFromString(state.openFileValueLeft) : '--OPEN--';
   !state.openFileValueLeft && (leftOpenFileInput.value = state.openFileValueLeft);
   leftClearButton.style.display = state.selectedChannel === 'right' ? 'none' : 'revert';
   rightFileSelect.style.display = state.selectedChannel === 'right' ? 'revert' : 'none';
   rightFileSelect.value = state.fileSelectValueRight;
-  rightOpenFileInput.style.display = state.selectedChannel === 'right' ? 'revert' : 'none';
+  rightOpenFileLabel.style.display = state.selectedChannel === 'right' ? 'revert' : 'none';
+  rightOpenFileLabel.textContent = state.openFileValueRight ? getFilenameFromString(state.openFileValueRight) : '--OPEN--';
   !state.openFileValueRight && (rightOpenFileInput.value = state.openFileValueRight);
   rightClearButton.style.display = state.selectedChannel === 'right' ? 'revert' : 'none';
 };
@@ -401,8 +407,10 @@ rightFileSelect.onchange = async (e: Event) => {
 };
 leftClearButton.onclick = () => {
   clear('left');
+  clear('right');
 };
 rightClearButton.onclick = () => {
+  clear('left');
   clear('right');
   connectMono();
 };

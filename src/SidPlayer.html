@@ -194,12 +194,12 @@
         <p id="line4"></p>
       </div>
       <div class="control">
-        <select id="channelSelect" autocomplete="off">
-          <option value="left">Mono/Stereo-L</option>
-          <option value="right">Stereo-R</option>
+        <select id="channelSelect" class="monospace" autocomplete="off">
+          <option value="left">MONO/STEREO-L</option>
+          <option value="right">STEREO-R</option>
         </select>
-        <select id="leftFileSelect" autocomplete="off">
-          <option value="">--SELECT A SID FILE--</option>
+        <select id="leftFileSelect" class="monospace" autocomplete="off">
+          <option value="">--SELECT--</option>
           <option value="ACCORDIAN">ACCORDIAN</option>
           <option value="ALBUMLEAF">ALBUMLEAF</option>
           <option value="AXELF-L">AXELF-L</option>
@@ -233,17 +233,19 @@
           <option value="YOY">YOY</option>
           <option value="ZORRO">ZORRO</option>
         </select>
+        <label id="leftOpenFileLabel" for="leftOpenFile" class="customOpenFile monospace">--OPEN--</label>
         <input id="leftOpenFile" type="file" accept=".prg,.mus" autocomplete="off" />
-        <button id="leftClear" class="clearButton">X</button>
-        <select id="rightFileSelect" autocomplete="off">
-          <option value="">--SELECT A SID FILE--</option>
+        <button id="leftClear" class="clearButton monospace">X</button>
+        <select id="rightFileSelect" class="monospace" autocomplete="off">
+          <option value="">--SELECT--</option>
           <option value="AXELF-R">AXELF-R</option>
         </select>
+        <label id="rightOpenFileLabel" for="rightOpenFile" class="customOpenFile monospace">--OPEN--</label>
         <input id="rightOpenFile" type="file" accept=".prg,.mus" autocomplete="off" />
-        <button id="rightClear" class="clearButton">X</button>
+        <button id="rightClear" class="clearButton monospace">X</button>
       </div>
       <div class="control">
-        <span id="current">00:00</span>
+        <span id="current" class="monospace">00:00</span>
         <input
           type="range"
           min="0"
@@ -255,8 +257,11 @@
           disabled="true"
           autocomplete="off"
         />
-        <span id="duration">00:00</span>
+        <span id="duration" class="monospace">00:00</span>
         <button id="playPause" class="playPauseButton" disabled="true" autocomplete="off"></button>
+      </div>
+      <div class="source monospace">
+        <p>Source code available on <a href="https://github.com/stevi84/sid-player" target="_blank">GitHub</a></p>
       </div>
     </div>
     <script defer src="sidplayer.bundle.js"></script>
