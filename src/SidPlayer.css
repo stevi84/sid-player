@@ -88,23 +88,24 @@ body {
   height: 66%;
 }
 .text {
-  text-align: center;
+  text-align: left;
   height: 7rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.8);
+  background: white;
   border-radius: 12px;
   padding: 12px 20px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-
   p {
     margin: 0;
-    line-height: 1.5;
+    span {
+      white-space-collapse: preserve;
+    }
   }
 }
 .monospace {
-  font-family: "Noto Sans Mono", monospace;
+  font-family: "Cascadia Mono", sans-serif;
   font-optical-sizing: auto;
   font-weight: 400;
   font-style: normal;
@@ -116,7 +117,7 @@ body {
   justify-content: center;
   flex-wrap: wrap;
   gap: 10px;
-  background: rgba(255, 255, 255, 0.8);
+  background: white;
   border-radius: 12px;
   padding: 12px 20px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);

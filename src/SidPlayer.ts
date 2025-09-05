@@ -112,10 +112,11 @@ const getTimeString = (value: number): string => {
   return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 };
 
-const getColoredText = (text: string, color: string, reverse: boolean) => {
+const backgroundColor: string = 'rgb(255,255,255)';
+const getColoredText = (text: string, textColor: string, reverse: boolean) => {
   const span = document.createElement('span') as HTMLSpanElement;
-  span.style.color = reverse ? 'rgb(255,255,255)' : color;
-  span.style.backgroundColor = reverse ? color : 'rgb(255,255,255)';
+  span.style.color = reverse ? backgroundColor : textColor;
+  span.style.backgroundColor = reverse ? textColor : backgroundColor;
   span.innerText = text;
   return span;
 };
@@ -361,6 +362,7 @@ leftOpenFileInput.onchange = (e: Event) => {
   const value: string = e.target.value;
   if (value) {
     state.openFileValueLeft = value;
+    state.fileSelectValueLeft = '';
     // @ts-ignore
     const file: File = e.target.files[0];
     file && loadSidFile('left', file);
@@ -373,6 +375,7 @@ rightOpenFileInput.onchange = (e: Event) => {
   const value: string = e.target.value;
   if (value) {
     state.openFileValueRight = value;
+    state.fileSelectValueRight = '';
     // @ts-ignore
     const file: File = e.target.files[0];
     file && loadSidFile('right', file);
@@ -385,6 +388,7 @@ leftFileSelect.onchange = async (e: Event) => {
   const value: string = e.target.value;
   if (value) {
     state.fileSelectValueLeft = value;
+    state.openFileValueLeft = '';
     const response = await fetch(`sids/${value}.MUS.prg`);
     const file = await response.blob();
     loadSidFile('left', file);
@@ -397,6 +401,7 @@ rightFileSelect.onchange = async (e: Event) => {
   const value: string = e.target.value;
   if (value) {
     state.fileSelectValueRight = value;
+    state.openFileValueRight = '';
     const response = await fetch(`sids/${value}.MUS.prg`);
     const file = await response.blob();
     loadSidFile('right', file);
