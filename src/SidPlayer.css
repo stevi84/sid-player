@@ -106,6 +106,8 @@ body {
 }
 .monospace {
   font-family: "Cascadia Mono", sans-serif;
+  /* font-family: "Noto Sans Mono", "Noto Sans Symbols", "Noto Sans Symbols 2", monospace; */
+  /* font-family: "Unifont", monospace; */
   font-optical-sizing: auto;
   font-weight: 400;
   font-style: normal;
@@ -122,22 +124,12 @@ body {
   padding: 12px 20px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
-#channelSelect {
-  max-width: 120px;
-}
-#leftFileSelect,
-#rightFileSelect,
-#channelSelect {
+#fileSelect {
   padding: 5px 10px;
   border-radius: 6px;
   border: 1px solid #ccc;
   background: white;
   font-size: 1em;
-}
-#rightFileSelect,
-#rightOpenFileLabel,
-#rightClear {
-  display: none;
 }
 input[type="file"] {
   display: none;

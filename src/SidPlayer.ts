@@ -6,32 +6,24 @@ const keyDivs: HTMLDivElement[] = [];
 for (let i = 0; i < 96; i++) keyDivs[i] = document.getElementById(`k${i}`) as HTMLDivElement;
 const textLines: HTMLParagraphElement[] = [];
 for (let i = 0; i < 5; i++) textLines[i] = document.getElementById(`line${i}`) as HTMLParagraphElement;
-const channelSelect = document.getElementById('channelSelect') as HTMLSelectElement;
-const leftFileSelect = document.getElementById('leftFileSelect') as HTMLSelectElement;
-const leftOpenFileLabel = document.getElementById('leftOpenFileLabel') as HTMLLabelElement;
-const leftOpenFileInput = document.getElementById('leftOpenFile') as HTMLInputElement;
-const leftClearButton = document.getElementById('leftClear') as HTMLButtonElement;
-const rightFileSelect = document.getElementById('rightFileSelect') as HTMLSelectElement;
-const rightOpenFileLabel = document.getElementById('rightOpenFileLabel') as HTMLLabelElement;
-const rightOpenFileInput = document.getElementById('rightOpenFile') as HTMLInputElement;
-const rightClearButton = document.getElementById('rightClear') as HTMLButtonElement;
+const fileSelect = document.getElementById('fileSelect') as HTMLSelectElement;
+const openFileLabel = document.getElementById('openFileLabel') as HTMLLabelElement;
+const openFileInput = document.getElementById('openFile') as HTMLInputElement;
+const clearButton = document.getElementById('clear') as HTMLButtonElement;
 const playPauseButton = document.getElementById('playPause') as HTMLButtonElement;
 const currentSpan = document.getElementById('current') as HTMLSpanElement;
 const timeSlider = document.getElementById('timeslider') as HTMLInputElement;
 const durationSpan = document.getElementById('duration') as HTMLSpanElement;
 
 type State = {
-  selectedChannel: Channel;
   isLoading: boolean;
   isPlaying: boolean;
-  fileSelectValueLeft: string;
-  openFileValueLeft: string;
   durationLeft: number;
   voicesDataLeft: Command[][];
   durationRight: number;
   voicesDataRight: Command[][];
-  fileSelectValueRight: string;
-  openFileValueRight: string;
+  fileSelectValue: string;
+  openFileValue: string;
   notes: NoteViz[][];
   currentNotes: number[];
   text: number[];
@@ -40,17 +32,14 @@ type State = {
   audioContextStartTime: number;
 };
 const internalState: State = {
-  selectedChannel: 'left',
   isLoading: false,
   isPlaying: false,
   durationLeft: 0,
   voicesDataLeft: [],
-  fileSelectValueLeft: '',
-  openFileValueLeft: '',
   durationRight: 0,
   voicesDataRight: [],
-  fileSelectValueRight: '',
-  openFileValueRight: '',
+  fileSelectValue: '',
+  openFileValue: '',
   notes: [[], [], [], [], [], []],
   currentNotes: [-1, -1, -1, -1, -1, -1],
   text: [],
@@ -60,14 +49,7 @@ const internalState: State = {
 };
 const handler: ProxyHandler<State> = {
   set(target: State, property: keyof State, value: any) {
-    if (property === 'currentNotes') {
-      for (let i = 0; i < 6; i++) {
-        clearKeyColor(
-          target.currentNotes[i] >= 0 && target.notes[i].length > 0 ? target.notes[i][target.currentNotes[i]].index : -1
-        );
-      }
-    }
-    if (property === 'notes') {
+    if (['notes', 'currentNotes'].includes(property)) {
       for (let i = 0; i < 6; i++) {
         clearKeyColor(
           target.currentNotes[i] >= 0 && target.notes[i].length > 0 ? target.notes[i][target.currentNotes[i]].index : -1
@@ -83,15 +65,7 @@ const handler: ProxyHandler<State> = {
     if (['text'].includes(property)) {
       updateUiText();
     }
-    if (
-      [
-        'selectedChannel',
-        'fileSelectValueLeft',
-        'openFileValueLeft',
-        'fileSelectValueRight',
-        'openFileValueRight',
-      ].includes(property)
-    ) {
+    if (['fileSelectValue', 'openFileValue'].includes(property)) {
       updateUiFileSelects();
     }
     if (
@@ -99,6 +73,18 @@ const handler: ProxyHandler<State> = {
     ) {
       updateUiPlayArea();
     }
+
+    if (['notes'].includes(property)) {
+      if (
+        (target.notes[0].length > 0 || target.notes[1].length > 0 || target.notes[2].length > 0) &&
+        (target.notes[3].length > 0 || target.notes[4].length > 0 || target.notes[5].length > 0)
+      ) {
+        connectStereo();
+      } else {
+        connectMono();
+      }
+    }
+
     return true;
   },
 };
@@ -278,18 +264,9 @@ const updateUiText = () => {
   }
 };
 const updateUiFileSelects = () => {
-  leftFileSelect.style.display = state.selectedChannel === 'right' ? 'none' : 'revert';
-  leftFileSelect.value = state.fileSelectValueLeft;
-  leftOpenFileLabel.style.display = state.selectedChannel === 'right' ? 'none' : 'revert';
-  leftOpenFileLabel.textContent = state.openFileValueLeft ? getFilenameFromString(state.openFileValueLeft) : '--OPEN--';
-  !state.openFileValueLeft && (leftOpenFileInput.value = state.openFileValueLeft);
-  leftClearButton.style.display = state.selectedChannel === 'right' ? 'none' : 'revert';
-  rightFileSelect.style.display = state.selectedChannel === 'right' ? 'revert' : 'none';
-  rightFileSelect.value = state.fileSelectValueRight;
-  rightOpenFileLabel.style.display = state.selectedChannel === 'right' ? 'revert' : 'none';
-  rightOpenFileLabel.textContent = state.openFileValueRight ? getFilenameFromString(state.openFileValueRight) : '--OPEN--';
-  !state.openFileValueRight && (rightOpenFileInput.value = state.openFileValueRight);
-  rightClearButton.style.display = state.selectedChannel === 'right' ? 'revert' : 'none';
+  fileSelect.value = state.fileSelectValue;
+  openFileLabel.textContent = state.openFileValue ? getFilenameFromString(state.openFileValue) : '--OPEN--';
+  !state.openFileValue && (openFileInput.value = state.openFileValue);
 };
 const updateUiPlayArea = () => {
   playPauseButton.disabled = state.voicesDataLeft.length === 0 || state.isLoading;
@@ -311,7 +288,6 @@ const loadSidFile = async (channel: Channel, file: Blob) => {
     state.voicesDataRight = voicesData;
     state.notes = [state.notes[0], state.notes[1], state.notes[2], notes[0], notes[1], notes[2]];
     state.currentNotes = [state.currentNotes[0], state.currentNotes[1], state.currentNotes[2], -1, -1, -1];
-    connectStereo();
   } else {
     state.durationLeft = duration;
     state.voicesDataLeft = voicesData;
@@ -325,99 +301,66 @@ const loadSidFile = async (channel: Channel, file: Blob) => {
   state.isLoading = false;
 };
 
-const clear = (channel: Channel) => {
+const clear = () => {
   pause();
   state.isLoading = false;
   state.isPlaying = false;
-  if (channel === 'right') {
-    state.durationRight = 0;
-    state.voicesDataRight = [];
-    state.fileSelectValueRight = '';
-    state.openFileValueRight = '';
-    state.notes = [state.notes[0], state.notes[1], state.notes[2], [], [], []];
-    state.currentNotes = [state.currentNotes[0], state.currentNotes[1], state.currentNotes[2], -1, -1, -1];
-  } else {
-    state.durationLeft = 0;
-    state.voicesDataLeft = [];
-    state.fileSelectValueLeft = '';
-    state.openFileValueLeft = '';
-    state.notes = [[], [], [], state.notes[3], state.notes[4], state.notes[5]];
-    state.currentNotes = [-1, -1, -1, state.currentNotes[3], state.currentNotes[4], state.currentNotes[5]];
-    // SELECT A SID FILE
-    state.text = [
-      0x53, 0x45, 0x4c, 0x45, 0x43, 0x54, 0x20, 0x41, 0x20, 0x53, 0x49, 0x44, 0x20, 0x46, 0x49, 0x4c, 0x45, 0x0,
-    ];
-  }
+  state.durationLeft = 0;
+  state.voicesDataLeft = [];
+  state.durationRight = 0;
+  state.voicesDataRight = [];
+  state.fileSelectValue = '';
+  state.openFileValue = '';
+  state.notes = [[], [], [], [], [], []];
+  state.currentNotes = [-1, -1, -1, -1, -1, -1];
+  // SELECT A SID FILE
+  state.text = [
+    0x53, 0x45, 0x4c, 0x45, 0x43, 0x54, 0x20, 0x41, 0x20, 0x53, 0x49, 0x44, 0x20, 0x46, 0x49, 0x4c, 0x45, 0x0,
+  ];
   state.startTime = 0;
   state.currentTime = 0;
   state.audioContextStartTime = audioContext.currentTime;
 };
 
-channelSelect.onchange = (e: Event) => {
-  state.selectedChannel = (e.target as HTMLSelectElement).value as Channel;
-};
-
-leftOpenFileInput.onchange = (e: Event) => {
+openFileInput.onchange = (e: Event) => {
   // @ts-ignore
   const value: string = e.target.value;
   if (value) {
-    state.openFileValueLeft = value;
-    state.fileSelectValueLeft = '';
+    state.openFileValue = value;
+    state.fileSelectValue = '';
     // @ts-ignore
-    const file: File = e.target.files[0];
-    file && loadSidFile('left', file);
-  } else {
-    clear('left');
+    const files: File[] = e.target.files;
+    for (const file of files) {
+      if (file.name.endsWith('.mus')) {
+        loadSidFile('left', file);
+      } else if (file.name.endsWith('.str')) {
+        loadSidFile('right', file);
+      }
+      // TODO wds file handling
+    }
   }
 };
-rightOpenFileInput.onchange = (e: Event) => {
+fileSelect.onchange = async (e: Event) => {
   // @ts-ignore
   const value: string = e.target.value;
   if (value) {
-    state.openFileValueRight = value;
-    state.fileSelectValueRight = '';
-    // @ts-ignore
-    const file: File = e.target.files[0];
-    file && loadSidFile('right', file);
-  } else {
-    clear('right');
+    state.fileSelectValue = value;
+    state.openFileValue = '';
+    const fileNames = value.split(',');
+    for (const fileName of fileNames) {
+      const response = await fetch(`sids/${fileName}`);
+      const file = await response.blob();
+      if (fileName.endsWith('.mus')) {
+        loadSidFile('left', file);
+      } else if (fileName.endsWith('.str')) {
+        loadSidFile('right', file);
+      }
+      // TODO wds file handling
+    }
   }
 };
-leftFileSelect.onchange = async (e: Event) => {
-  // @ts-ignore
-  const value: string = e.target.value;
-  if (value) {
-    state.fileSelectValueLeft = value;
-    state.openFileValueLeft = '';
-    const response = await fetch(`sids/${value}.MUS.prg`);
-    const file = await response.blob();
-    loadSidFile('left', file);
-  } else {
-    clear('left');
-  }
-};
-rightFileSelect.onchange = async (e: Event) => {
-  // @ts-ignore
-  const value: string = e.target.value;
-  if (value) {
-    state.fileSelectValueRight = value;
-    state.openFileValueRight = '';
-    const response = await fetch(`sids/${value}.MUS.prg`);
-    const file = await response.blob();
-    loadSidFile('right', file);
-  } else {
-    clear('right');
-    connectMono();
-  }
-};
-leftClearButton.onclick = () => {
-  clear('left');
-  clear('right');
-};
-rightClearButton.onclick = () => {
-  clear('left');
-  clear('right');
-  connectMono();
+clearButton.onclick = () => {
+  clear();
 };
 
 const clearKeyColor = (index: number) => {

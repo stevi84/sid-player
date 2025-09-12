@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="C64 SID-Player - Play classic Commodore 64 SID music directly in your browser. Supports mono and stereo playback of .prg and .mus files."
+      content="C64 SID-Player - Play classic Commodore 64 SID music directly in your browser. Supports mono and stereo playback of .mus and .str files."
     />
     <meta name="keywords" content="C64, Commodore 64, SID, SID-Player, Web Audio Api, Browser Player" />
     <meta name="author" content="stevi84" />
@@ -18,6 +18,11 @@
       href="https://fonts.googleapis.com/css2?family=Cascadia+Mono:ital,wght@0,200..700;1,200..700&family=Noto+Sans+Mono&display=swap"
       rel="stylesheet"
     />
+    <!-- <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Mono:wght@400;700&family=Noto+Sans+Symbols&family=Noto+Sans+Symbols+2&display=swap"
+      rel="stylesheet"
+    /> -->
+    <!-- <link href="https://cdn.jsdelivr.net/npm/@fontsource/unifont@5.2.5/index.min.css" rel="stylesheet" /> -->
     <link href="SidPlayer.css" rel="stylesheet" />
   </head>
   <body>
@@ -202,55 +207,43 @@
         <p id="line4"></p>
       </div>
       <div class="control">
-        <select id="channelSelect" class="monospace" autocomplete="off">
-          <option value="left">MONO/STEREO-L</option>
-          <option value="right">STEREO-R</option>
-        </select>
-        <select id="leftFileSelect" class="monospace" autocomplete="off">
+        <select id="fileSelect" class="monospace" autocomplete="off">
           <option value="">--SELECT--</option>
-          <option value="ACCORDIAN">ACCORDIAN</option>
-          <option value="ALBUMLEAF">ALBUMLEAF</option>
-          <option value="AXELF-L">AXELF-L</option>
-          <option value="AXELF-R">AXELF-R</option>
-          <option value="BYEBYE">BYEBYE</option>
-          <option value="CALLIOPE">CALLIOPE</option>
-          <option value="CANTINA">CANTINA</option>
-          <option value="CHASE">CHASE</option>
-          <option value="DREF">DREF</option>
-          <option value="DUCKIE">DUCKIE</option>
-          <option value="EGGS">EGGS</option>
-          <option value="ENOLA">ENOLA</option>
-          <option value="ENTRY">ENTRY</option>
-          <option value="ET_AL">ET AL</option>
-          <option value="FEAST">FEAST</option>
-          <option value="HAPPYSONG">HAPPYSONG</option>
-          <option value="HARMONICA">HARMONICA</option>
-          <option value="HOLST">HOLST</option>
-          <option value="HOMECOMING">HOMECOMING</option>
-          <option value="KCOV">KCOV</option>
-          <option value="KOTO">KOTO</option>
-          <option value="LONGEST">LONGEST</option>
-          <option value="MULE">MULE</option>
-          <option value="OSPREY">OSPREY</option>
-          <option value="PEANUTS">PEANUTS</option>
-          <option value="PIPERS">PIPERS</option>
-          <option value="RAINBOW">RAINBOW</option>
-          <option value="SHEWORKS">SHEWORKS</option>
-          <option value="SPLASH">SPLASH</option>
-          <option value="WSOLDIER">WSOLDIER</option>
-          <option value="YOY">YOY</option>
-          <option value="ZORRO">ZORRO</option>
+          <option value="ACCORDIAN.mus">ACCORDIAN</option>
+          <option value="ALBUMLEAF.mus">ALBUMLEAF</option>
+          <option value="AXELF.mus,AXELF.str">AXELF</option>
+          <option value="BYEBYE.mus">BYEBYE</option>
+          <option value="CALLIOPE.mus">CALLIOPE</option>
+          <option value="CANTINA.mus">CANTINA</option>
+          <option value="CHASE.mus">CHASE</option>
+          <option value="DREF.mus">DREF</option>
+          <option value="DUCKIE.mus">DUCKIE</option>
+          <option value="EGGS.mus">EGGS</option>
+          <option value="ENOLA.mus">ENOLA</option>
+          <option value="ENTRY.mus">ENTRY</option>
+          <option value="ET_AL.mus">ET AL</option>
+          <option value="FEAST.mus">FEAST</option>
+          <option value="HAPPYSONG.mus">HAPPYSONG</option>
+          <option value="HARMONICA.mus">HARMONICA</option>
+          <option value="HOLST.mus">HOLST</option>
+          <option value="HOMECOMING.mus">HOMECOMING</option>
+          <option value="KCOV.mus">KCOV</option>
+          <option value="KOTO.mus">KOTO</option>
+          <option value="LONGEST.mus">LONGEST</option>
+          <option value="MULE.mus">MULE</option>
+          <option value="OSPREY.mus">OSPREY</option>
+          <option value="PEANUTS.mus">PEANUTS</option>
+          <option value="PIPERS.mus">PIPERS</option>
+          <option value="RAINBOW.mus">RAINBOW</option>
+          <option value="SHEWORKS.mus">SHEWORKS</option>
+          <option value="SPLASH.mus">SPLASH</option>
+          <option value="WSOLDIER.mus">WSOLDIER</option>
+          <option value="YOY.mus">YOY</option>
+          <option value="ZORRO.mus">ZORRO</option>
         </select>
-        <label id="leftOpenFileLabel" for="leftOpenFile" class="customOpenFile monospace">--OPEN--</label>
-        <input id="leftOpenFile" type="file" accept=".prg,.mus" autocomplete="off" />
-        <button id="leftClear" class="clearButton monospace">X</button>
-        <select id="rightFileSelect" class="monospace" autocomplete="off">
-          <option value="">--SELECT--</option>
-          <option value="AXELF-R">AXELF-R</option>
-        </select>
-        <label id="rightOpenFileLabel" for="rightOpenFile" class="customOpenFile monospace">--OPEN--</label>
-        <input id="rightOpenFile" type="file" accept=".prg,.mus" autocomplete="off" />
-        <button id="rightClear" class="clearButton monospace">X</button>
+        <label id="openFileLabel" for="openFile" class="customOpenFile monospace">--OPEN--</label>
+        <input id="openFile" type="file" accept=".mus,.str,.wds" multiple autocomplete="off" />
+        <button id="clear" class="clearButton monospace">X</button>
       </div>
       <div class="control">
         <span id="current" class="monospace">00:00</span>
