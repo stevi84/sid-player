@@ -93,7 +93,7 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  background: white;
+  background: rgb(0, 0, 170);
   border-radius: 12px;
   padding: 12px 20px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -104,10 +104,14 @@ body {
     }
   }
 }
+@font-face {
+  font-family: 'Cascadia Mono';
+  src: url('CascadiaMono.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+}
 .monospace {
   font-family: "Cascadia Mono", sans-serif;
-  /* font-family: "Noto Sans Mono", "Noto Sans Symbols", "Noto Sans Symbols 2", monospace; */
-  /* font-family: "Unifont", monospace; */
   font-optical-sizing: auto;
   font-weight: 400;
   font-style: normal;

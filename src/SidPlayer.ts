@@ -98,7 +98,7 @@ const getTimeString = (value: number): string => {
   return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 };
 
-const backgroundColor: string = 'rgb(255,255,255)';
+const backgroundColor: string = 'rgb(0, 0, 170)';
 const getColoredText = (text: string, textColor: string, reverse: boolean) => {
   const span = document.createElement('span') as HTMLSpanElement;
   span.style.color = reverse ? backgroundColor : textColor;
@@ -132,133 +132,138 @@ const updateUiKeyboard = () => {
 const updateUiText = () => {
   for (let i = 0; i < 5; i++) textLines[i].textContent = '';
 
-  let count: number = 0;
+  let lineCount: number = 0;
   let text: string = '';
-  let color: string = colorTable['blk'].rgba();
+  let textCount: number = 0;
+  let color: string = colorTable['lblu'].rgba();
   let reverse: boolean = false;
 
   textLoop: for (const byte of state.text) {
     switch (byte) {
       case 0x0:
         // end of text
-        if (text) textLines[count].append(getColoredText(text, color, reverse));
+        if (text) textLines[lineCount].append(getColoredText(text, color, reverse));
         break textLoop;
       case 0xd:
         // new line
-        textLines[count].append(getColoredText(text, color, reverse));
-        count++;
+        textLines[lineCount].append(getColoredText(text, color, reverse));
+        textLines[lineCount].append(getColoredText(' '.repeat(40 - textCount), color, false));
+        lineCount++;
         text = '';
+        textCount = 0;
+        reverse = false;
         break;
       case 0x5:
         // wht
-        textLines[count].append(getColoredText(text, color, reverse));
+        textLines[lineCount].append(getColoredText(text, color, reverse));
         text = '';
         color = colorTable['wht'].rgba();
         break;
       case 0x12:
         // rvsOn
-        textLines[count].append(getColoredText(text, color, reverse));
+        textLines[lineCount].append(getColoredText(text, color, reverse));
         text = '';
         reverse = true;
         break;
       case 0x1c:
         // red
-        textLines[count].append(getColoredText(text, color, reverse));
+        textLines[lineCount].append(getColoredText(text, color, reverse));
         text = '';
         color = colorTable['red'].rgba();
         break;
       case 0x1e:
         // grn
-        textLines[count].append(getColoredText(text, color, reverse));
+        textLines[lineCount].append(getColoredText(text, color, reverse));
         text = '';
         color = colorTable['grn'].rgba();
         break;
       case 0x1f:
         // blu
-        textLines[count].append(getColoredText(text, color, reverse));
+        textLines[lineCount].append(getColoredText(text, color, reverse));
         text = '';
         color = colorTable['blu'].rgba();
         break;
       case 0x81:
         // orng
-        textLines[count].append(getColoredText(text, color, reverse));
+        textLines[lineCount].append(getColoredText(text, color, reverse));
         text = '';
         color = colorTable['orng'].rgba();
         break;
       case 0x90:
         // blk
-        textLines[count].append(getColoredText(text, color, reverse));
+        textLines[lineCount].append(getColoredText(text, color, reverse));
         text = '';
         color = colorTable['blk'].rgba();
         break;
       case 0x92:
         // rvsOff
-        textLines[count].append(getColoredText(text, color, reverse));
+        textLines[lineCount].append(getColoredText(text, color, reverse));
         text = '';
         reverse = false;
         break;
       case 0x95:
         // brn
-        textLines[count].append(getColoredText(text, color, reverse));
+        textLines[lineCount].append(getColoredText(text, color, reverse));
         text = '';
         color = colorTable['brn'].rgba();
         break;
       case 0x96:
         // lred
-        textLines[count].append(getColoredText(text, color, reverse));
+        textLines[lineCount].append(getColoredText(text, color, reverse));
         text = '';
         color = colorTable['lred'].rgba();
         break;
       case 0x97:
         // dgry
-        textLines[count].append(getColoredText(text, color, reverse));
+        textLines[lineCount].append(getColoredText(text, color, reverse));
         text = '';
         color = colorTable['dgry'].rgba();
         break;
       case 0x98:
         // mgry
-        textLines[count].append(getColoredText(text, color, reverse));
+        textLines[lineCount].append(getColoredText(text, color, reverse));
         text = '';
         color = colorTable['mgry'].rgba();
         break;
       case 0x99:
         // lgrn
-        textLines[count].append(getColoredText(text, color, reverse));
+        textLines[lineCount].append(getColoredText(text, color, reverse));
         text = '';
         color = colorTable['lgrn'].rgba();
         break;
       case 0x9a:
         // lblu
-        textLines[count].append(getColoredText(text, color, reverse));
+        textLines[lineCount].append(getColoredText(text, color, reverse));
         text = '';
         color = colorTable['lblu'].rgba();
         break;
       case 0x9b:
         // lgry
-        textLines[count].append(getColoredText(text, color, reverse));
+        textLines[lineCount].append(getColoredText(text, color, reverse));
         text = '';
         color = colorTable['lgry'].rgba();
         break;
       case 0x9c:
         // pur
-        textLines[count].append(getColoredText(text, color, reverse));
+        textLines[lineCount].append(getColoredText(text, color, reverse));
         text = '';
         color = colorTable['pur'].rgba();
         break;
       case 0x9e:
         // yel
-        textLines[count].append(getColoredText(text, color, reverse));
+        textLines[lineCount].append(getColoredText(text, color, reverse));
         text = '';
         color = colorTable['yel'].rgba();
         break;
       case 0x9f:
         // cyn
-        textLines[count].append(getColoredText(text, color, reverse));
+        textLines[lineCount].append(getColoredText(text, color, reverse));
         text = '';
         color = colorTable['cyn'].rgba();
         break;
       default:
         text += trans[byte] || '?';
+        textCount++;
         break;
     }
   }

@@ -28,6 +28,10 @@ module.exports = {
           from: path.resolve(__dirname, 'src', 'C64SidProcessor.js'),
           to: path.resolve(__dirname, 'dist'),
         },
+        {
+          from: path.resolve(__dirname, 'assets', 'CascadiaMono.woff2'),
+          to: path.resolve(__dirname, 'dist'),
+        },
       ],
     }),
   ],
