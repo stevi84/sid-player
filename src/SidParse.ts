@@ -513,8 +513,7 @@ const getCommand = (byte1: number, byte2: number): Command | undefined => {
   }
 };
 
-// Cascadia Code, es fehlt 1fb8c, 1fb8f
-
+// https://en.wikipedia.org/wiki/PETSCII
 export const trans: { [key: number]: string } = {
   0x3: 'stop',
   0x5: 'wht',
@@ -596,8 +595,10 @@ export const trans: { [key: number]: string } = {
   0x5f: '←',
   0x60: '─',
   0x61: '♠',
-  0x62: '│',
-  0x63: '─',
+  0x62: '│', //'\u{2502}',
+  0x63: '─', //'\u{2500}',
+  // 0x62: '🭲', //'\u{1fb72}',
+  // 0x63: '🭸', //'\u{1fb78}',
   0x64: '🭷', //'\u{1fb77}',
   0x65: '🭶', //'\u{1fb76}',
   0x66: '🭺', //'\u{1fb7a}',
@@ -659,9 +660,11 @@ export const trans: { [key: number]: string } = {
   0xa2: '▄',
   0xa3: '▔',
   0xa4: '▁',
-  0xa5: '▎',
+  0xa5: '▎', //'\u{258e}',
+  // 0xa5: '▏', //'\u{258f}',
   0xa6: '▒',
   0xa7: '🮇', //'\u{1fb87}',
+  // 0xa7: '▕', //'\u{2595}',
   0xa8: '🮏', //'\u{1fb8f}',
   0xa9: '◤',
   0xaa: '🮇', //'\u{1fb87}',
@@ -688,8 +691,10 @@ export const trans: { [key: number]: string } = {
   0xbf: '▚',
   0xc0: '─',
   0xc1: '♠',
-  0xc2: '│',
-  0xc3: '─',
+  0xc2: '│', //'\u{2502}',
+  0xc3: '─', //'\u{2500}',
+  // 0xc2: '🭲', //'\u{1fb72}',
+  // 0xc3: '🭸', //'\u{1fb78}',
   0xc4: '🭷', //'\u{1fb77}',
   0xc5: '🭶', //'\u{1fb76}',
   0xc6: '🭺', //'\u{1fb7a}',
@@ -723,9 +728,11 @@ export const trans: { [key: number]: string } = {
   0xe2: '▄',
   0xe3: '▔',
   0xe4: '▁',
-  0xe5: '▎',
+  0xe5: '▎', //'\u{258e}',
+  // 0xe5: '▏', //'\u{258f}',
   0xe6: '▒',
   0xe7: '🮇', //'\u{1fb87}',
+  // 0xe7: '▕', //'\u{2595}',
   0xe8: '🮏', //'\u{1fb8f}',
   0xe9: '◤',
   0xea: '🮇', //'\u{1fb87}',
