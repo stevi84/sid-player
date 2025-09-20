@@ -513,7 +513,6 @@ const getCommand = (byte1: number, byte2: number): Command | undefined => {
   }
 };
 
-// https://en.wikipedia.org/wiki/PETSCII
 export const trans: { [key: number]: string } = {
   0x3: 'stop',
   0x5: 'wht',
@@ -529,104 +528,102 @@ export const trans: { [key: number]: string } = {
   0x1d: 'right',
   0x1e: 'grn',
   0x1f: 'blu',
-  0x20: ' ',
-  0x21: '!',
-  0x22: '"',
-  0x23: '#',
-  0x24: '$',
-  0x25: '%',
-  0x26: '&',
-  0x27: "'",
-  0x28: '(',
-  0x29: ')',
-  0x2a: '*',
-  0x2b: '+',
-  0x2c: ',',
-  0x2d: '-',
-  0x2e: '.',
-  0x2f: '/',
-  0x30: '0',
-  0x31: '1',
-  0x32: '2',
-  0x33: '3',
-  0x34: '4',
-  0x35: '5',
-  0x36: '6',
-  0x37: '7',
-  0x38: '8',
-  0x39: '9',
-  0x3a: ':',
-  0x3b: ';',
-  0x3c: '<',
-  0x3d: '=',
-  0x3e: '>',
-  0x3f: '?',
-  0x40: '@',
-  0x41: 'A',
-  0x42: 'B',
-  0x43: 'C',
-  0x44: 'D',
-  0x45: 'E',
-  0x46: 'F',
-  0x47: 'G',
-  0x48: 'H',
-  0x49: 'I',
-  0x4a: 'J',
-  0x4b: 'K',
-  0x4c: 'L',
-  0x4d: 'M',
-  0x4e: 'N',
-  0x4f: 'O',
-  0x50: 'P',
-  0x51: 'Q',
-  0x52: 'R',
-  0x53: 'S',
-  0x54: 'T',
-  0x55: 'U',
-  0x56: 'V',
-  0x57: 'W',
-  0x58: 'X',
-  0x59: 'Y',
-  0x5a: 'Z',
-  0x5b: '[',
-  0x5c: '£',
-  0x5d: ']',
-  0x5e: '↑',
-  0x5f: '←',
-  0x60: '─',
-  0x61: '♠',
-  0x62: '│', //'\u{2502}',
-  0x63: '─', //'\u{2500}',
-  // 0x62: '🭲', //'\u{1fb72}',
-  // 0x63: '🭸', //'\u{1fb78}',
-  0x64: '🭷', //'\u{1fb77}',
-  0x65: '🭶', //'\u{1fb76}',
-  0x66: '🭺', //'\u{1fb7a}',
-  0x67: '🭱', //'\u{1fb71}',
-  0x68: '🭴', //'\u{1fb74}',
-  0x69: '╮',
-  0x6a: '╰',
-  0x6b: '╯',
-  0x6c: '🭼', //'\u{1fb7c}',
-  0x6d: '╲',
-  0x6e: '╱',
-  0x6f: '🭽', //'\u{1fb7d}',
-  0x70: '🭾', //'\u{1fb7e}',
-  0x71: '•',
-  0x72: '🭻', //'\u{1fb7b}',
-  0x73: '♥',
-  0x74: '🭰', //'\u{1fb70}',
-  0x75: '╭',
-  0x76: '╳',
-  0x77: '○',
-  0x78: '♣',
-  0x79: '🭵', //'\u{1fb75}',
-  0x7a: '♦',
-  0x7b: '┼',
-  0x7c: '🮌', //'\u{1fb8c}',
-  0x7d: '│',
-  0x7e: 'π',
-  0x7f: '◥',
+  0x20: ' ', //'\u{20}', // SPACE
+  0x21: '!', //'\u{21}', // EXCLAMATION MARK
+  0x22: '"', //'\u{22}', // QUOTATION MARK
+  0x23: '#', //'\u{23}', // NUMBER SIGN
+  0x24: '$', //'\u{24}', // DOLLAR SIGN
+  0x25: '%', //'\u{25}', // PERCENT SIGN
+  0x26: '&', //'\u{26}', // AMPERSAND
+  0x27: "'", //'\u{27}', // APOSTROPHE
+  0x28: '(', //'\u{28}', // LEFT PARENTHESIS
+  0x29: ')', //'\u{29}', // RIGHT PARENTHESIS
+  0x2a: '*', //'\u{2a}', // ASTERISK
+  0x2b: '+', //'\u{2b}', // PLUS SIGN
+  0x2c: ',', //'\u{2c}', // COMMA
+  0x2d: '-', //'\u{2d}', // HYPHEN-MINUS
+  0x2e: '.', //'\u{2e}', // FULL STOP
+  0x2f: '/', //'\u{2f}', // SOLIDUS
+  0x30: '0', //'\u{30}', // DIGIT ZERO
+  0x31: '1', //'\u{31}', // DIGIT ONE
+  0x32: '2', //'\u{32}', // DIGIT TWO
+  0x33: '3', //'\u{33}', // DIGIT THREE
+  0x34: '4', //'\u{34}', // DIGIT FOUR
+  0x35: '5', //'\u{35}', // DIGIT FIVE
+  0x36: '6', //'\u{36}', // DIGIT SIX
+  0x37: '7', //'\u{37}', // DIGIT SEVEN
+  0x38: '8', //'\u{38}', // DIGIT EIGHT
+  0x39: '9', //'\u{39}', // DIGIT NINE
+  0x3a: ':', //'\u{3a}', // COLON
+  0x3b: ';', //'\u{3b}', // SEMICOLON
+  0x3c: '<', //'\u{3c}', // LESS-THAN SIGN
+  0x3d: '=', //'\u{3d}', // EQUALS SIGN
+  0x3e: '>', //'\u{3e}', // GREATER-THAN SIGN
+  0x3f: '?', //'\u{3f}', // QUESTION MARK
+  0x40: '@', //'\u{40}', // COMMERCIAL AT
+  0x41: 'A', //'\u{41}', // LATIN CAPITAL LETTER A
+  0x42: 'B', //'\u{42}', // LATIN CAPITAL LETTER B
+  0x43: 'C', //'\u{43}', // LATIN CAPITAL LETTER C
+  0x44: 'D', //'\u{44}', // LATIN CAPITAL LETTER D
+  0x45: 'E', //'\u{45}', // LATIN CAPITAL LETTER E
+  0x46: 'F', //'\u{46}', // LATIN CAPITAL LETTER F
+  0x47: 'G', //'\u{47}', // LATIN CAPITAL LETTER G
+  0x48: 'H', //'\u{48}', // LATIN CAPITAL LETTER H
+  0x49: 'I', //'\u{49}', // LATIN CAPITAL LETTER I
+  0x4a: 'J', //'\u{4a}', // LATIN CAPITAL LETTER J
+  0x4b: 'K', //'\u{4b}', // LATIN CAPITAL LETTER K
+  0x4c: 'L', //'\u{4c}', // LATIN CAPITAL LETTER L
+  0x4d: 'M', //'\u{4d}', // LATIN CAPITAL LETTER M
+  0x4e: 'N', //'\u{4e}', // LATIN CAPITAL LETTER N
+  0x4f: 'O', //'\u{4f}', // LATIN CAPITAL LETTER O
+  0x50: 'P', //'\u{50}', // LATIN CAPITAL LETTER P
+  0x51: 'Q', //'\u{51}', // LATIN CAPITAL LETTER Q
+  0x52: 'R', //'\u{52}', // LATIN CAPITAL LETTER R
+  0x53: 'S', //'\u{53}', // LATIN CAPITAL LETTER S
+  0x54: 'T', //'\u{54}', // LATIN CAPITAL LETTER T
+  0x55: 'U', //'\u{55}', // LATIN CAPITAL LETTER U
+  0x56: 'V', //'\u{56}', // LATIN CAPITAL LETTER V
+  0x57: 'W', //'\u{57}', // LATIN CAPITAL LETTER W
+  0x58: 'X', //'\u{58}', // LATIN CAPITAL LETTER X
+  0x59: 'Y', //'\u{59}', // LATIN CAPITAL LETTER Y
+  0x5a: 'Z', //'\u{5a}', // LATIN CAPITAL LETTER Z
+  0x5b: '[', //'\u{5b}', // LEFT SQUARE BRACKET
+  0x5c: '£', //'\u{a3}', // POUND SIGN
+  0x5d: ']', //'\u{5d}', // RIGHT SQUARE BRACKET
+  0x5e: '↑', //'\u{2191}', // UPWARDS ARROW
+  0x5f: '←', //'\u{2190}', // LEFTWARDS ARROW
+  0x60: '─', //'\u{2500}', // BOX DRAWINGS LIGHT HORIZONTAL
+  0x61: '♠', //'\u{2660}', // BLACK SPADE SUIT
+  0x62: '🭲', //'\u{1fb72}', // VERTICAL ONE EIGHTH BLOCK-4
+  0x63: '🭸', //'\u{1fb78}', // HORIZONTAL ONE EIGHTH BLOCK-4
+  0x64: '🭷', //'\u{1fb77}', // HORIZONTAL ONE EIGHTH BLOCK-3
+  0x65: '🭶', //'\u{1fb76}', // HORIZONTAL ONE EIGHTH BLOCK-2
+  0x66: '🭺', //'\u{1fb7a}', // HORIZONTAL ONE EIGHTH BLOCK-6
+  0x67: '🭱', //'\u{1fb71}', // VERTICAL ONE EIGHTH BLOCK-3
+  0x68: '🭴', //'\u{1fb74}', // VERTICAL ONE EIGHTH BLOCK-6
+  0x69: '╮', //'\u{256e}', // BOX DRAWINGS LIGHT ARC DOWN AND LEFT
+  0x6a: '╰', //'\u{2570}', // BOX DRAWINGS LIGHT ARC UP AND RIGHT
+  0x6b: '╯', //'\u{256f}', // BOX DRAWINGS LIGHT ARC UP AND LEFT
+  0x6c: '🭼', //'\u{1fb7c}', // LEFT AND LOWER ONE EIGHTH BLOCK
+  0x6d: '╲', //'\u{2572}', // BOX DRAWINGS LIGHT DIAGONAL UPPER LEFT TO LOWER RIGHT
+  0x6e: '╱', //'\u{2571}', // BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT
+  0x6f: '🭽', //'\u{1fb7d}', // LEFT AND UPPER ONE EIGHTH BLOCK
+  0x70: '🭾', //'\u{1fb7e}', // RIGHT AND UPPER ONE EIGHTH BLOCK
+  0x71: '•', //'\u{2022}', // BULLET
+  0x72: '🭻', //'\u{1fb7b}', // HORIZONTAL ONE EIGHTH BLOCK-7
+  0x73: '♥', //'\u{2665}', // BLACK HEART SUIT
+  0x74: '🭰', //'\u{1fb70}', // VERTICAL ONE EIGHTH BLOCK-2
+  0x75: '╭', //'\u{256d}', // BOX DRAWINGS LIGHT ARC DOWN AND RIGHT
+  0x76: '╳', //'\u{2573}', // BOX DRAWINGS LIGHT DIAGONAL CROSS
+  0x77: '○', //'\u{25cb}', // WHITE CIRCLE
+  0x78: '♣', //'\u{2663}', // BLACK CLUB SUIT
+  0x79: '🭵', //'\u{1fb75}', // VERTICAL ONE EIGHTH BLOCK-7
+  0x7a: '♦', //'\u{2666}', // BLACK DIAMOND SUIT
+  0x7b: '┼', //'\u{253c}', // BOX DRAWINGS LIGHT VERTICAL AND HORIZONTAL
+  0x7c: '🮌', //'\u{1fb8c}', // LEFT HALF MEDIUM SHADE
+  0x7d: '│', //'\u{2502}', // BOX DRAWINGS LIGHT VERTICAL
+  0x7e: 'π', //'\u{3c0}', // GREEK SMALL LETTER PI
+  0x7f: '◥', //'\u{25e5}', // BLACK UPPER RIGHT TRIANGLE
   0x81: 'orng',
   0x83: 'run',
   0x85: 'f1',
@@ -655,108 +652,102 @@ export const trans: { [key: number]: string } = {
   0x9d: 'left',
   0x9e: 'yel',
   0x9f: 'cyn',
-  0xa0: ' ',
-  0xa1: '▌',
-  0xa2: '▄',
-  0xa3: '▔',
-  0xa4: '▁',
-  0xa5: '▎', //'\u{258e}',
-  // 0xa5: '▏', //'\u{258f}',
-  0xa6: '▒',
-  0xa7: '🮇', //'\u{1fb87}',
-  // 0xa7: '▕', //'\u{2595}',
-  0xa8: '🮏', //'\u{1fb8f}',
-  0xa9: '◤',
-  0xaa: '🮇', //'\u{1fb87}',
-  0xab: '├',
-  0xac: '▗',
-  0xad: '└',
-  0xae: '┐',
-  0xaf: '▂',
-  0xb0: '┌',
-  0xb1: '┴',
-  0xb2: '┬',
-  0xb3: '┤',
-  0xb4: '▎',
-  0xb5: '▍',
-  0xb6: '🮈', //'\u{1fb88}',
-  0xb7: '🮂', //'\u{1fb82}',
-  0xb8: '🮃', //'\u{1fb83}',
-  0xb9: '▃',
-  0xba: '🭿', //'\u{1fb7f}',
-  0xbb: '▖',
-  0xbc: '▝',
-  0xbd: '┘',
-  0xbe: '▘',
-  0xbf: '▚',
-  0xc0: '─',
-  0xc1: '♠',
-  0xc2: '│', //'\u{2502}',
-  0xc3: '─', //'\u{2500}',
-  // 0xc2: '🭲', //'\u{1fb72}',
-  // 0xc3: '🭸', //'\u{1fb78}',
-  0xc4: '🭷', //'\u{1fb77}',
-  0xc5: '🭶', //'\u{1fb76}',
-  0xc6: '🭺', //'\u{1fb7a}',
-  0xc7: '🭱', //'\u{1fb71}',
-  0xc8: '🭴', //'\u{1fb74}',
-  0xc9: '╮',
-  0xca: '╰',
-  0xcb: '╯',
-  0xcc: '🭼', //'\u{1fb7c}',
-  0xcd: '╲',
-  0xce: '╱',
-  0xcf: '🭽', //'\u{1fb7d}',
-  0xd0: '🭾', //'\u{1fb7e}',
-  0xd1: '•',
-  0xd2: '🭻', //'\u{1fb7b}',
-  0xd3: '♥',
-  0xd4: '🭰', //'\u{1fb70}',
-  0xd5: '╭',
-  0xd6: '╳',
-  0xd7: '○',
-  0xd8: '♣',
-  0xd9: '🭵', //'\u{1fb75}',
-  0xda: '♦',
-  0xdb: '┼',
-  0xdc: '🮌', //'\u{1fb8c}',
-  0xdd: '│',
-  0xde: 'π',
-  0xdf: '◥',
-  0xe0: ' ',
-  0xe1: '▌',
-  0xe2: '▄',
-  0xe3: '▔',
-  0xe4: '▁',
-  0xe5: '▎', //'\u{258e}',
-  // 0xe5: '▏', //'\u{258f}',
-  0xe6: '▒',
-  0xe7: '🮇', //'\u{1fb87}',
-  // 0xe7: '▕', //'\u{2595}',
-  0xe8: '🮏', //'\u{1fb8f}',
-  0xe9: '◤',
-  0xea: '🮇', //'\u{1fb87}',
-  0xeb: '├',
-  0xec: '▗',
-  0xed: '└',
-  0xee: '┐',
-  0xef: '▂',
-  0xf0: '┌',
-  0xf1: '┴',
-  0xf2: '┬',
-  0xf3: '┤',
-  0xf4: '▎',
-  0xf5: '▍',
-  0xf6: '🮈', //'\u{1fb88}',
-  0xf7: '🮂', //'\u{1fb82}',
-  0xf8: '🮃', //'\u{1fb83}',
-  0xf9: '▃',
-  0xfa: '🭿', //'\u{1fb7f}',
-  0xfb: '▖',
-  0xfc: '▝',
-  0xfd: '┘',
-  0xfe: '▘',
-  0xff: 'π',
+  0xa0: ' ', //'\u{20}', // SPACE
+  0xa1: '▌', //'\u{258c}', // LEFT HALF BLOCK
+  0xa2: '▄', //'\u{2584}', // LOWER HALF BLOCK
+  0xa3: '▔', //'\u{2594}', // UPPER ONE EIGHTH BLOCK
+  0xa4: '▁', //'\u{2581}', // LOWER ONE EIGHTH BLOCK
+  0xa5: '▏', //'\u{258f}', // LEFT ONE EIGHTH BLOCK
+  0xa6: '▒', //'\u{2592}', // MEDIUM SHADE
+  0xa7: '▕', //'\u{2595}', // RIGHT ONE EIGHTH BLOCK
+  0xa8: '🮏', //'\u{1fb8f}', // LOWER HALF MEDIUM SHADE
+  0xa9: '◤', //'\u{25e4}', // BLACK UPPER LEFT TRIANGLE
+  0xaa: '🮇', //'\u{1fb87}', // RIGHT ONE QUARTER BLOCK
+  0xab: '├', //'\u{251c}', // BOX DRAWINGS LIGHT VERTICAL AND RIGHT
+  0xac: '▗', //'\u{2597}', // QUADRANT LOWER RIGHT
+  0xad: '└', //'\u{2514}', // BOX DRAWINGS LIGHT UP AND RIGHT
+  0xae: '┐', //'\u{2510}', // BOX DRAWINGS LIGHT DOWN AND LEFT
+  0xaf: '▂', //'\u{2582}', // LOWER ONE QUARTER BLOCK
+  0xb0: '┌', //'\u{250c}', // BOX DRAWINGS LIGHT DOWN AND RIGHT
+  0xb1: '┴', //'\u{2534}', // BOX DRAWINGS LIGHT UP AND HORIZONTAL
+  0xb2: '┬', //'\u{252c}', // BOX DRAWINGS LIGHT DOWN AND HORIZONTAL
+  0xb3: '┤', //'\u{2524}', // BOX DRAWINGS LIGHT VERTICAL AND LEFT
+  0xb4: '▎', //'\u{258e}', // LEFT ONE QUARTER BLOCK
+  0xb5: '▍', //'\u{258d}', // LEFT THREE EIGHTHS BLOCK
+  0xb6: '🮈', //'\u{1fb88}', // RIGHT THREE EIGHTHS BLOCK
+  0xb7: '🮂', //'\u{1fb82}', // UPPER ONE QUARTER BLOCK
+  0xb8: '🮃', //'\u{1fb83}', // UPPER THREE EIGHTHS BLOCK
+  0xb9: '▃', //'\u{2583}', // LOWER THREE EIGHTHS BLOCK
+  0xba: '🭿', //'\u{1fb7f}', // RIGHT AND LOWER ONE EIGHTH BLOCK
+  0xbb: '▖', //'\u{2596}', // QUADRANT LOWER LEFT
+  0xbc: '▝', //'\u{259d}', // QUADRANT UPPER RIGHT
+  0xbd: '┘', //'\u{2518}', // BOX DRAWINGS LIGHT UP AND LEFT
+  0xbe: '▘', //'\u{2598}', // QUADRANT UPPER LEFT
+  0xbf: '▚', //'\u{259a}', // QUADRANT UPPER LEFT AND LOWER RIGHT
+  0xc0: '─', //'\u{2500}', // BOX DRAWINGS LIGHT HORIZONTAL
+  0xc1: '♠', //'\u{2660}', // BLACK SPADE SUIT
+  0xc2: '🭲', //'\u{1fb72}', // VERTICAL ONE EIGHTH BLOCK-4
+  0xc3: '🭸', //'\u{1fb78}', // HORIZONTAL ONE EIGHTH BLOCK-4
+  0xc4: '🭷', //'\u{1fb77}', // HORIZONTAL ONE EIGHTH BLOCK-3
+  0xc5: '🭶', //'\u{1fb76}', // HORIZONTAL ONE EIGHTH BLOCK-2
+  0xc6: '🭺', //'\u{1fb7a}', // HORIZONTAL ONE EIGHTH BLOCK-6
+  0xc7: '🭱', //'\u{1fb71}', // VERTICAL ONE EIGHTH BLOCK-3
+  0xc8: '🭴', //'\u{1fb74}', // VERTICAL ONE EIGHTH BLOCK-6
+  0xc9: '╮', //'\u{256e}', // BOX DRAWINGS LIGHT ARC DOWN AND LEFT
+  0xca: '╰', //'\u{2570}', // BOX DRAWINGS LIGHT ARC UP AND RIGHT
+  0xcb: '╯', //'\u{256f}', // BOX DRAWINGS LIGHT ARC UP AND LEFT
+  0xcc: '🭼', //'\u{1fb7c}', // LEFT AND LOWER ONE EIGHTH BLOCK
+  0xcd: '╲', //'\u{2572}', // BOX DRAWINGS LIGHT DIAGONAL UPPER LEFT TO LOWER RIGHT
+  0xce: '╱', //'\u{2571}', // BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT
+  0xcf: '🭽', //'\u{1fb7d}', // LEFT AND UPPER ONE EIGHTH BLOCK
+  0xd0: '🭾', //'\u{1fb7e}', // RIGHT AND UPPER ONE EIGHTH BLOCK
+  0xd1: '•', //'\u{2022}', // BULLET
+  0xd2: '🭻', //'\u{1fb7b}', // HORIZONTAL ONE EIGHTH BLOCK-7
+  0xd3: '♥', //'\u{2665}', // BLACK HEART SUIT
+  0xd4: '🭰', //'\u{1fb70}', // VERTICAL ONE EIGHTH BLOCK-2
+  0xd5: '╭', //'\u{256d}', // BOX DRAWINGS LIGHT ARC DOWN AND RIGHT
+  0xd6: '╳', //'\u{2573}', // BOX DRAWINGS LIGHT DIAGONAL CROSS
+  0xd7: '○', //'\u{25cb}', // WHITE CIRCLE
+  0xd8: '♣', //'\u{2663}', // BLACK CLUB SUIT
+  0xd9: '🭵', //'\u{1fb75}', // VERTICAL ONE EIGHTH BLOCK-7
+  0xda: '♦', //'\u{2666}', // BLACK DIAMOND SUIT
+  0xdb: '┼', //'\u{253c}', // BOX DRAWINGS LIGHT VERTICAL AND HORIZONTAL
+  0xdc: '🮌', //'\u{1fb8c}', // LEFT HALF MEDIUM SHADE
+  0xdd: '│', //'\u{2502}', // BOX DRAWINGS LIGHT VERTICAL
+  0xde: 'π', //'\u{3c0}', // GREEK SMALL LETTER PI
+  0xdf: '◥', //'\u{25e5}', // BLACK UPPER RIGHT TRIANGLE
+  0xe0: ' ', //'\u{20}', // SPACE
+  0xe1: '▌', //'\u{258c}', // LEFT HALF BLOCK
+  0xe2: '▄', //'\u{2584}', // LOWER HALF BLOCK
+  0xe3: '▔', //'\u{2594}', // UPPER ONE EIGHTH BLOCK
+  0xe4: '▁', //'\u{2581}', // LOWER ONE EIGHTH BLOCK
+  0xe5: '▏', //'\u{258f}', // LEFT ONE EIGHTH BLOCK
+  0xe6: '▒', //'\u{2592}', // MEDIUM SHADE
+  0xe7: '▕', //'\u{2595}', // RIGHT ONE EIGHTH BLOCK
+  0xe8: '🮏', //'\u{1fb8f}', // LOWER HALF MEDIUM SHADE
+  0xe9: '◤', //'\u{25e4}', // BLACK UPPER LEFT TRIANGLE
+  0xea: '🮇', //'\u{1fb87}', // RIGHT ONE QUARTER BLOCK
+  0xeb: '├', //'\u{251c}', // BOX DRAWINGS LIGHT VERTICAL AND RIGHT
+  0xec: '▗', //'\u{2597}', // QUADRANT LOWER RIGHT
+  0xed: '└', //'\u{2514}', // BOX DRAWINGS LIGHT UP AND RIGHT
+  0xee: '┐', //'\u{2510}', // BOX DRAWINGS LIGHT DOWN AND LEFT
+  0xef: '▂', //'\u{2582}', // LOWER ONE QUARTER BLOCK
+  0xf0: '┌', //'\u{250c}', // BOX DRAWINGS LIGHT DOWN AND RIGHT
+  0xf1: '┴', //'\u{2534}', // BOX DRAWINGS LIGHT UP AND HORIZONTAL
+  0xf2: '┬', //'\u{252c}', // BOX DRAWINGS LIGHT DOWN AND HORIZONTAL
+  0xf3: '┤', //'\u{2524}', // BOX DRAWINGS LIGHT VERTICAL AND LEFT
+  0xf4: '▎', //'\u{258e}', // LEFT ONE QUARTER BLOCK
+  0xf5: '▍', //'\u{258d}', // LEFT THREE EIGHTHS BLOCK
+  0xf6: '🮈', //'\u{1fb88}', // RIGHT THREE EIGHTHS BLOCK
+  0xf7: '🮂', //'\u{1fb82}', // UPPER ONE QUARTER BLOCK
+  0xf8: '🮃', //'\u{1fb83}', // UPPER THREE EIGHTHS BLOCK
+  0xf9: '▃', //'\u{2583}', // LOWER THREE EIGHTHS BLOCK
+  0xfa: '🭿', //'\u{1fb7f}', // RIGHT AND LOWER ONE EIGHTH BLOCK
+  0xfb: '▖', //'\u{2596}', // QUADRANT LOWER LEFT
+  0xfc: '▝', //'\u{259d}', // QUADRANT UPPER RIGHT
+  0xfd: '┘', //'\u{2518}', // BOX DRAWINGS LIGHT UP AND LEFT
+  0xfe: '▘', //'\u{2598}', // QUADRANT UPPER LEFT
+  0xff: 'π', //'\u{3c0}', // GREEK SMALL LETTER PI
 };
 
 const readFileAsArrayBuffer = async (blob: Blob): Promise<ArrayBuffer> =>

@@ -32,6 +32,10 @@ module.exports = {
           from: path.resolve(__dirname, 'assets', 'CascadiaMono.woff2'),
           to: path.resolve(__dirname, 'dist'),
         },
+        {
+          from: path.resolve(__dirname, 'assets', 'C64ProMono.woff2'),
+          to: path.resolve(__dirname, 'dist'),
+        },
       ],
     }),
   ],

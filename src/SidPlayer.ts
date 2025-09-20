@@ -98,7 +98,7 @@ const getTimeString = (value: number): string => {
   return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 };
 
-const backgroundColor: string = 'rgb(0, 0, 170)';
+const backgroundColor: string = 'rgb(0, 0, 0)';
 const getColoredText = (text: string, textColor: string, reverse: boolean) => {
   const span = document.createElement('span') as HTMLSpanElement;
   span.style.color = reverse ? backgroundColor : textColor;
@@ -135,7 +135,8 @@ const updateUiText = () => {
   let lineCount: number = 0;
   let text: string = '';
   let textCount: number = 0;
-  let color: string = colorTable['lblu'].rgba();
+  let textCountPerLine: number[] = [0, 0, 0, 0, 0];
+  let color: string = colorTable['wht'].rgba();
   let reverse: boolean = false;
 
   textLoop: for (const byte of state.text) {
@@ -147,7 +148,7 @@ const updateUiText = () => {
       case 0xd:
         // new line
         textLines[lineCount].append(getColoredText(text, color, reverse));
-        textLines[lineCount].append(getColoredText(' '.repeat(40 - textCount), color, false));
+        textCountPerLine[lineCount] = textCount;
         lineCount++;
         text = '';
         textCount = 0;
@@ -266,6 +267,10 @@ const updateUiText = () => {
         textCount++;
         break;
     }
+  }
+
+  for (let i = 0; i < 5; i++) {
+    textCountPerLine[i] < 32 && textLines[i].append(getColoredText(' '.repeat(32 - textCountPerLine[i]), color, false));
   }
 };
 const updateUiFileSelects = () => {
