@@ -89,7 +89,6 @@ body {
 }
 .text {
   text-align: left;
-  height: 7rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -101,8 +100,42 @@ body {
   p {
     margin: 0;
     span {
-      white-space-collapse: preserve;
+      white-space: preserve nowrap;
     }
+  }
+}
+@media (orientation: portrait) {
+  .text {
+    height: calc(5*9px + 4px);
+    min-height: calc(5*9px + 4px);
+    width: calc(32*9px);
+    font-size: 9px;
+  }
+  #fileSelect, .customOpenFile, .clearButton, #current, #duration {
+    font-size: 13px;
+  }
+  #fileSelect {
+    max-width: 120px;
+  }
+  .customOpenFile {
+    max-width: 120px;
+  }
+}
+@media (orientation: landscape) {
+  .text {
+    height: calc(5*16px + 4px);
+    min-height: calc(5*16px + 4px);
+    width: calc(32*16px);
+    font-size: 16px;
+  }
+  #fileSelect, .customOpenFile, .clearButton, #current, #duration {
+    font-size: 16px;
+  }
+  #fileSelect {
+    max-width: 140px;
+  }
+  .customOpenFile {
+    max-width: 140px;
   }
 }
 @font-face {
@@ -147,20 +180,22 @@ body {
   border-radius: 6px;
   border: 1px solid #ccc;
   background: white;
-  font-size: 1em;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 input[type="file"] {
   display: none;
 }
 .customOpenFile {
+  box-sizing: border-box;
   padding: 5px 10px;
   border-radius: 6px;
   border: 1px solid #ccc;
   background: white;
-  font-size: 1em;
   cursor: pointer;
-  max-width: 140px;
   overflow: hidden;
+  white-space: nowrap;
   text-overflow: ellipsis;
 }
 .clearButton {
@@ -168,7 +203,6 @@ input[type="file"] {
   border-radius: 6px;
   border: 1px solid #ccc;
   background: white;
-  font-size: 1em;
   cursor: pointer;
 }
 /* https://css-tricks.com/making-pure-css-playpause-button/ */
