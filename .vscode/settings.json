@@ -5,4 +5,15 @@
   "editor.insertSpaces": true,
   "editor.fontFamily": "'Cascadia Code'",
   "editor.fontLigatures": true,
+  "terminal.integrated.profiles.windows": {
+    "PowerShell": {
+      "source": "PowerShell",
+      "icon": "terminal-powershell",
+      "args": [
+        "-ExecutionPolicy",
+        "Bypass"
+      ]
+    }
+  },
+  "terminal.integrated.defaultProfile.windows": "PowerShell"
 }

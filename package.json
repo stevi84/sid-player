@@ -18,10 +18,10 @@
   },
   "homepage": "https://github.com/stevi84/sid-player#readme",
   "devDependencies": {
-    "copy-webpack-plugin": "^13.0.0",
-    "ts-loader": "^9.5.2",
-    "webpack": "^5.99.5",
-    "webpack-cli": "^6.0.1",
-    "webpack-dev-server": "^5.2.1"
+    "copy-webpack-plugin": "13.0.1",
+    "ts-loader": "9.5.4",
+    "webpack": "5.101.3",
+    "webpack-cli": "6.0.1",
+    "webpack-dev-server": "5.2.2"
   }
 }
