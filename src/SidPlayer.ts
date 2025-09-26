@@ -132,10 +132,9 @@ const updateUiKeyboard = () => {
 const updateUiText = () => {
   for (let i = 0; i < 5; i++) textLines[i].textContent = '';
 
-  let lineCount: number = 0;
-  let text: string = '';
-  let textCount: number = 0;
-  let textCountPerLine: number[] = [0, 0, 0, 0, 0];
+  let text: HTMLSpanElement[][] = [[], [], [], [], []];
+  let lineIndex: number = 0;
+  let pos: number = 0;
   let color: string = colorTable['wht'].rgba();
   let reverse: boolean = false;
 
@@ -143,134 +142,194 @@ const updateUiText = () => {
     switch (byte) {
       case 0x0:
         // end of text
-        if (text) textLines[lineCount].append(getColoredText(text, color, reverse));
         break textLoop;
-      case 0xd:
-        // new line
-        textLines[lineCount].append(getColoredText(text, color, reverse));
-        textCountPerLine[lineCount] = textCount;
-        lineCount++;
-        text = '';
-        textCount = 0;
-        reverse = false;
+      case 0x1:
+      case 0x2:
+      case 0x3:
+      case 0x4:
+        // ignored control characters
+        console.warn(`Ignored control character: ${byte}`);
         break;
       case 0x5:
         // wht
-        textLines[lineCount].append(getColoredText(text, color, reverse));
-        text = '';
         color = colorTable['wht'].rgba();
+        break;
+      case 0x6:
+      case 0x7:
+      case 0x8:
+      case 0x9:
+      case 0xa:
+      case 0xb:
+      case 0xc:
+        // ignored control characters
+        console.warn(`Ignored control character: ${byte}`);
+        break;
+      case 0xd:
+        // new line
+        lineIndex++;
+        pos = 0;
+        reverse = false;
+        break;
+      case 0xe:
+      case 0xf:
+      case 0x10:
+      case 0x11:
+        // ignored control characters
+        console.warn(`Ignored control character: ${byte}`);
         break;
       case 0x12:
         // rvsOn
-        textLines[lineCount].append(getColoredText(text, color, reverse));
-        text = '';
         reverse = true;
+        break;
+      case 0x13:
+        // ignored control character
+        console.warn(`Ignored control character: ${byte}`);
+        break;
+      case 0x14:
+        // del
+        if (pos > 0) {
+          text[lineIndex].splice(pos - 1, 1);
+          pos--;
+        } else {
+          console.warn('Cannot delete');
+        }
+        break;
+      case 0x15:
+      case 0x16:
+      case 0x17:
+      case 0x18:
+      case 0x19:
+      case 0x1a:
+      case 0x1b:
+        // ignored control characters
+        console.warn(`Ignored control character: ${byte}`);
         break;
       case 0x1c:
         // red
-        textLines[lineCount].append(getColoredText(text, color, reverse));
-        text = '';
         color = colorTable['red'].rgba();
+        break;
+      case 0x1d:
+        // ignored control character
+        console.warn(`Ignored control character: ${byte}`);
         break;
       case 0x1e:
         // grn
-        textLines[lineCount].append(getColoredText(text, color, reverse));
-        text = '';
         color = colorTable['grn'].rgba();
         break;
       case 0x1f:
         // blu
-        textLines[lineCount].append(getColoredText(text, color, reverse));
-        text = '';
         color = colorTable['blu'].rgba();
+        break;
+      case 0x80:
+        // ignored control character
+        console.warn(`Ignored control character: ${byte}`);
         break;
       case 0x81:
         // orng
-        textLines[lineCount].append(getColoredText(text, color, reverse));
-        text = '';
         color = colorTable['orng'].rgba();
+        break;
+      case 0x82:
+      case 0x83:
+      case 0x84:
+      case 0x85:
+      case 0x86:
+      case 0x87:
+      case 0x88:
+      case 0x89:
+      case 0x8a:
+      case 0x8b:
+      case 0x8c:
+      case 0x8d:
+      case 0x8e:
+      case 0x8f:
+        // ignored control characters
+        console.warn(`Ignored control character: ${byte}`);
         break;
       case 0x90:
         // blk
-        textLines[lineCount].append(getColoredText(text, color, reverse));
-        text = '';
         color = colorTable['blk'].rgba();
+        break;
+      case 0x91:
+        // ignored control character
+        console.warn(`Ignored control character: ${byte}`);
         break;
       case 0x92:
         // rvsOff
-        textLines[lineCount].append(getColoredText(text, color, reverse));
-        text = '';
         reverse = false;
+        break;
+      case 0x93:
+      case 0x94:
+        // ignored control characters
+        console.warn(`Ignored control character: ${byte}`);
         break;
       case 0x95:
         // brn
-        textLines[lineCount].append(getColoredText(text, color, reverse));
-        text = '';
         color = colorTable['brn'].rgba();
         break;
       case 0x96:
         // lred
-        textLines[lineCount].append(getColoredText(text, color, reverse));
-        text = '';
         color = colorTable['lred'].rgba();
         break;
       case 0x97:
         // dgry
-        textLines[lineCount].append(getColoredText(text, color, reverse));
-        text = '';
         color = colorTable['dgry'].rgba();
         break;
       case 0x98:
         // mgry
-        textLines[lineCount].append(getColoredText(text, color, reverse));
-        text = '';
         color = colorTable['mgry'].rgba();
         break;
       case 0x99:
         // lgrn
-        textLines[lineCount].append(getColoredText(text, color, reverse));
-        text = '';
         color = colorTable['lgrn'].rgba();
         break;
       case 0x9a:
         // lblu
-        textLines[lineCount].append(getColoredText(text, color, reverse));
-        text = '';
         color = colorTable['lblu'].rgba();
         break;
       case 0x9b:
         // lgry
-        textLines[lineCount].append(getColoredText(text, color, reverse));
-        text = '';
         color = colorTable['lgry'].rgba();
         break;
       case 0x9c:
         // pur
-        textLines[lineCount].append(getColoredText(text, color, reverse));
-        text = '';
         color = colorTable['pur'].rgba();
+        break;
+      case 0x9d:
+        // left
+        if (pos > 0) {
+          pos--;
+        } else {
+          console.warn('Cannot move left');
+        }
         break;
       case 0x9e:
         // yel
-        textLines[lineCount].append(getColoredText(text, color, reverse));
-        text = '';
         color = colorTable['yel'].rgba();
         break;
       case 0x9f:
         // cyn
-        textLines[lineCount].append(getColoredText(text, color, reverse));
-        text = '';
         color = colorTable['cyn'].rgba();
         break;
       default:
-        text += trans[byte] || '?';
-        textCount++;
+        if (pos === text[lineIndex].length) {
+          text[lineIndex].push(getColoredText(trans[byte] || '?', color, reverse));
+          pos++;
+        } else {
+          text[lineIndex].splice(pos, 1, getColoredText(trans[byte] || '?', color, reverse));
+          pos++;
+        }
         break;
     }
   }
 
   for (let i = 0; i < 5; i++) {
-    textCountPerLine[i] < 32 && textLines[i].append(getColoredText(' '.repeat(32 - textCountPerLine[i]), color, false));
+    text[i].length < 32 &&
+      text[i].push(
+        ...Array(32 - text[i].length)
+          .fill(' ')
+          .map((e) => getColoredText(e, color, false))
+      );
+    textLines[i].append(...text[i]);
   }
 };
 const updateUiFileSelects = () => {
