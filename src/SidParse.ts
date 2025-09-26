@@ -780,11 +780,11 @@ export const parseSid = async (blob: Blob): Promise<{ voices: Command[][]; text:
     const byte1 = buffer.getUint8(i);
     const byte2 = buffer.getUint8(i + 1);
     const cmd = getCommand(byte1, byte2);
-    if (!cmd) {
+    if (cmd) {
+      voice1.push(cmd);
+    } else {
       console.error(`unknown command, voiceindex 0, index ${voice1.length}, byte1 ${byte1}, byte2 ${byte2}`);
-      break;
     }
-    voice1.push(cmd);
   }
 
   const voice2: Command[] = [];
@@ -792,11 +792,11 @@ export const parseSid = async (blob: Blob): Promise<{ voices: Command[][]; text:
     const byte1 = buffer.getUint8(i);
     const byte2 = buffer.getUint8(i + 1);
     const cmd = getCommand(byte1, byte2);
-    if (!cmd) {
+    if (cmd) {
+      voice2.push(cmd);
+    } else {
       console.error(`unknown command, voiceindex 1, index ${voice2.length}, byte1 ${byte1}, byte2 ${byte2}`);
-      break;
     }
-    voice2.push(cmd);
   }
 
   const voice3: Command[] = [];
@@ -804,11 +804,11 @@ export const parseSid = async (blob: Blob): Promise<{ voices: Command[][]; text:
     const byte1 = buffer.getUint8(i);
     const byte2 = buffer.getUint8(i + 1);
     const cmd = getCommand(byte1, byte2);
-    if (!cmd) {
+    if (cmd) {
+      voice3.push(cmd);
+    } else {
       console.error(`unknown command, voiceindex 2, index ${voice3.length}, byte1 ${byte1}, byte2 ${byte2}`);
-      break;
     }
-    voice3.push(cmd);
   }
 
   const text: number[] = [];
