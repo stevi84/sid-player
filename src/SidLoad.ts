@@ -243,55 +243,41 @@ const setFilterFrequencyWidthSweep = (
   filter.c64Frequency(startValue, startTime);
   do {
     if (rate > 0 && time + (2047 - value) / rate < duration) {
+      // startTime, duration reduced otherwise:
+      // Failed to execute 'setValueAtTime' on 'AudioParam': setValueAtTime(730.956, 1.8) overlaps setValueCurveAtTime(..., 1.476253236565001, 0.3237467634349995)
       const dur = (2047 - value) / rate;
-      filter.lowPassFilter.frequency.setValueCurveAtTime(
-        getFilterSweepValues(value, rate, dur, getLowPassFrequency),
-        startTime + time,
-        dur
-      );
-      filter.highPassFilter.frequency.setValueCurveAtTime(
-        getFilterSweepValues(value, rate, dur, getHighPassFrequency),
-        startTime + time,
-        dur
-      );
-      const bandPassValues = getFilterSweepValues(value, rate, dur, getBandPassFrequency);
-      filter.bandPassFilter.frequency.setValueCurveAtTime(bandPassValues, startTime + time, dur);
-      filter.bandPassPeakFilter.frequency.setValueCurveAtTime(bandPassValues, startTime + time, dur);
+      const redDur = dur - 2e-6;
+      const lowPassValues = getFilterSweepValues(value, rate, redDur, getLowPassFrequency);
+      filter.lowPassFilter.frequency.setValueCurveAtTime(lowPassValues, startTime + time + 1e-6, redDur);
+      const highPassValues = getFilterSweepValues(value, rate, redDur, getHighPassFrequency);
+      filter.highPassFilter.frequency.setValueCurveAtTime(highPassValues, startTime + time + 1e-6, redDur);
+      const bandPassValues = getFilterSweepValues(value, rate, redDur, getBandPassFrequency);
+      filter.bandPassFilter.frequency.setValueCurveAtTime(bandPassValues, startTime + time + 1e-6, redDur);
+      filter.bandPassPeakFilter.frequency.setValueCurveAtTime(bandPassValues, startTime + time + 1e-6, redDur);
       time += dur;
       value = 0;
     } else if (rate < 0 && time - value / rate < duration) {
       const dur = -value / rate;
-      filter.lowPassFilter.frequency.setValueCurveAtTime(
-        getFilterSweepValues(value, rate, dur, getLowPassFrequency),
-        startTime + time,
-        dur
-      );
-      filter.highPassFilter.frequency.setValueCurveAtTime(
-        getFilterSweepValues(value, rate, dur, getHighPassFrequency),
-        startTime + time,
-        dur
-      );
-      const bandPassValues = getFilterSweepValues(value, rate, dur, getBandPassFrequency);
-      filter.bandPassFilter.frequency.setValueCurveAtTime(bandPassValues, startTime + time, dur);
-      filter.bandPassPeakFilter.frequency.setValueCurveAtTime(bandPassValues, startTime + time, dur);
+      const redDur = dur - 2e-6;
+      const lowPassValues = getFilterSweepValues(value, rate, redDur, getLowPassFrequency);
+      filter.lowPassFilter.frequency.setValueCurveAtTime(lowPassValues, startTime + time + 1e-6, redDur);
+      const highPassValues = getFilterSweepValues(value, rate, redDur, getHighPassFrequency);
+      filter.highPassFilter.frequency.setValueCurveAtTime(highPassValues, startTime + time + 1e-6, redDur);
+      const bandPassValues = getFilterSweepValues(value, rate, redDur, getBandPassFrequency);
+      filter.bandPassFilter.frequency.setValueCurveAtTime(bandPassValues, startTime + time + 1e-6, redDur);
+      filter.bandPassPeakFilter.frequency.setValueCurveAtTime(bandPassValues, startTime + time + 1e-6, redDur);
       time += dur;
       value = 2047;
     } else {
-      // -0.000001 otherwise Failed to execute 'setValueAtTime' on 'AudioParam': setValueAtTime(730.956, 1.8) overlaps setValueCurveAtTime(..., 1.476253236565001, 0.3237467634349995)
-      const dur = duration - time - 0.000001;
-      filter.lowPassFilter.frequency.setValueCurveAtTime(
-        getFilterSweepValues(value, rate, dur, getLowPassFrequency),
-        startTime + time,
-        dur
-      );
-      filter.highPassFilter.frequency.setValueCurveAtTime(
-        getFilterSweepValues(value, rate, dur, getHighPassFrequency),
-        startTime + time,
-        dur
-      );
-      const bandPassValues = getFilterSweepValues(value, rate, dur, getBandPassFrequency);
-      filter.bandPassFilter.frequency.setValueCurveAtTime(bandPassValues, startTime + time, dur);
-      filter.bandPassPeakFilter.frequency.setValueCurveAtTime(bandPassValues, startTime + time, dur);
+      const dur = duration - time;
+      const redDur = dur - 2e-6;
+      const lowPassValues = getFilterSweepValues(value, rate, redDur, getLowPassFrequency);
+      filter.lowPassFilter.frequency.setValueCurveAtTime(lowPassValues, startTime + time + 1e-6, redDur);
+      const highPassValues = getFilterSweepValues(value, rate, redDur, getHighPassFrequency);
+      filter.highPassFilter.frequency.setValueCurveAtTime(highPassValues, startTime + time + 1e-6, redDur);
+      const bandPassValues = getFilterSweepValues(value, rate, redDur, getBandPassFrequency);
+      filter.bandPassFilter.frequency.setValueCurveAtTime(bandPassValues, startTime + time + 1e-6, redDur);
+      filter.bandPassPeakFilter.frequency.setValueCurveAtTime(bandPassValues, startTime + time + 1e-6, redDur);
       time = duration;
     }
   } while (time < duration);
