@@ -30,6 +30,63 @@ The player uses the Web Audio API for audio processing. The following diagram sh
 - Advanced Sidplayer features not yet implemented
 - Waveforms were intendedly not exactly copied from the C64
 
+Command | Description | Supported
+--- | --- | ---
+def | Define phrase | ✓
+cal | Call phrase | ✓
+end | End phrase | ✓
+hed | Repeat head | ✓
+tal | Repeat tail | ✓
+tem | Tempo | ✓
+utl | Utility duration | ✓
+vol | Volume | ✓
+bmp | Increase/Decrease volume | ✓
+f-m | Filter mode | ✓
+aut | Auto filter voice | ✓
+res | Filter resonance | ✓
+flt | Filter voice | ✓
+f-s | Filter sweep | ✓
+f-c | Filter cutoff | ✓
+f-x | Filter external audio | ✓
+atk | Attack rate | ✓
+dcy | Decay rate | ✓
+sus | Sustain level | ✓
+rls | Release rate | ✓
+pnt | Release point | ✓
+wav | Waveform | ✓
+p-w | Pulse width | ✓
+p-s | Pulse width sweeping | ✓
+snc | Synchronisation | ✓
+rng | Ring modulation | ✓
+vdp | Vibrato depth | ✓
+vrt | Vibrato rate | ✓
+por | Portamento | ✓
+dtn | Detune | ✓
+tps | Transpose | ✓
+ms# | Measure | -
+3-O | Voice 3 | ✓
+flg | Flag | -
+hlt | Halt | ✓
+aux | Auxiliary | -
+note | Note | ✓
+abs | Absolute set pitch | ✓
+triplet | ... | ✗
+triplet 64th note | ... | ✗
+rup | ... | ✗
+lfo | ... | ✗
+rdn | ... | ✗
+src | ... | ✗
+dst | ... | ✗
+sca | ... | ✗
+pvd | ... | ✗
+pvr | ... | ✗
+max | ... | ✗
+utv | ... | ✗
+hld | ... | ✗
+jif | ... | ✗
+p&v | ... | ✗
+rtp | ... | ✗
+
 ## Installation and Usage
 
 ```bash
