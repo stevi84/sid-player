@@ -63,29 +63,28 @@ vrt | Vibrato rate | ✓
 por | Portamento | ✓
 dtn | Detune | ✓
 tps | Transpose | ✓
-ms# | Measure | -
-3-O | Voice 3 | ✓
-flg | Flag | -
+ms# | Measure | no effect
+3-O | Voice 3 off | ✓
+flg | Flag | no effect
 hlt | Halt | ✓
-aux | Auxiliary | -
+aux | Auxiliary | no effect
 note | Note | ✓
 abs | Absolute set pitch | ✓
-triplet | ... | ✗
-triplet 64th note | ... | ✗
-rup | ... | ✗
-lfo | ... | ✗
-rdn | ... | ✗
-src | ... | ✗
-dst | ... | ✗
-sca | ... | ✗
-pvd | ... | ✗
-pvr | ... | ✗
-max | ... | ✗
-utv | ... | ✗
-hld | ... | ✗
-jif | ... | ✗
-p&v | ... | ✗
-rtp | ... | ✗
+triplet | Triplet | ✗
+rup | Rate up | ✗
+lfo | Waveform type | ✗
+rdn | Rate down | ✗
+src | Modulation source | ✗
+dst | Modulation destination | ✗
+sca | Modulation scale | ✗
+max | Modulation maximum | ✗
+pvd | Pulse-width vibrato depth | ✗
+pvr | Pulse-width vibrato rate | ✗
+utv | Utility voice | ✗
+hld | Hold time | ✗
+jif | Jiffy length | ✗
+p&v | Portamento & vibrato | ✗
+rtp | Relative transposing | ✗
 
 ## Installation and Usage
 
