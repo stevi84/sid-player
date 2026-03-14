@@ -412,9 +412,9 @@ openFileInput.onchange = (e: Event) => {
     // @ts-ignore
     const files: File[] = e.target.files;
     for (const file of files) {
-      if (file.name.endsWith('.mus')) {
+      if (file.name.toLowerCase().endsWith('.mus')) {
         loadSidFile('left', file);
-      } else if (file.name.endsWith('.str')) {
+      } else if (file.name.toLowerCase().endsWith('.str')) {
         loadSidFile('right', file);
       }
       // TODO wds file handling
@@ -431,9 +431,9 @@ fileSelect.onchange = async (e: Event) => {
     for (const fileName of fileNames) {
       const response = await fetch(`sids/${fileName}`);
       const file = await response.blob();
-      if (fileName.endsWith('.mus')) {
+      if (fileName.toLowerCase().endsWith('.mus')) {
         loadSidFile('left', file);
-      } else if (fileName.endsWith('.str')) {
+      } else if (fileName.toLowerCase().endsWith('.str')) {
         loadSidFile('right', file);
       }
       // TODO wds file handling

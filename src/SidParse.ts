@@ -16,6 +16,7 @@ export type Command =
         modifier: Modifier;
         octave: Octave;
         note: Note;
+        triplet: boolean;
       };
     }
   | {
@@ -97,22 +98,29 @@ const getCommand = (byte1: number, byte2: number): Command | undefined => {
         break;
     }
     let dotted: Dotted;
-    switch (byte1 & 163) {
-      case 32:
-        dotted = 'sgl';
-        break;
-      case 160:
-        dotted = 'dbl';
-        break;
-      default:
-        dotted = 'non';
-        break;
+    if (duration === '64th') {
+      // 64th notes cannot be dotted
+      dotted = 'non';
+    } else {
+      switch (byte1 & 163) {
+        case 32:
+          dotted = 'sgl';
+          break;
+        case 160:
+          dotted = 'dbl';
+          break;
+        default:
+          dotted = 'non';
+          break;
+      }
     }
     const tie: boolean = (byte1 & 67) === 64;
     if ((byte1 & 63) === 4) duration = 'utl';
     if ((byte1 & 63) === 36) duration = 'utv';
-    if ((byte1 & 163) === 128) console.warn('triplet not implemented');
-    if ((byte1 & 191) === 160) console.warn('triplet 64th note not implemented');
+    let triplet: boolean = false;
+    if ((byte1 & 163) === 128) triplet = true;
+    // 64th triplet
+    if ((byte1 & 191) === 160) triplet = true;
 
     let modifier: Modifier;
     switch (byte2 & 192) {
@@ -188,7 +196,7 @@ const getCommand = (byte1: number, byte2: number): Command | undefined => {
     }
     return {
       type: byte1 === 0 ? 'abs' : 'note',
-      data: { duration, dotted, tie, modifier, octave, note },
+      data: { duration, dotted, tie, modifier, octave, note, triplet },
     };
   } else if (byte1 === 1) {
     if ((byte2 & 15) === 0) {

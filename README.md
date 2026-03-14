@@ -70,7 +70,7 @@ hlt | Halt | ✓
 aux | Auxiliary | no effect
 note | Note | ✓
 abs | Absolute set pitch | ✓
-triplet | Triplet | ✗
+triplet | Triplet | ✓
 rup | Rate up | ✗
 lfo | Waveform type | ✗
 rdn | Rate down | ✗

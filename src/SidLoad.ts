@@ -79,7 +79,13 @@ const calcFrequency = (
   return { index, frequency };
 };
 
-const calcDuration = (duration: Duration, dotted: Dotted, tempo: number, utilityDuration: number): number => {
+const calcDuration = (
+  duration: Duration,
+  dotted: Dotted,
+  tempo: number,
+  utilityDuration: number,
+  triplet: boolean
+): number => {
   let mod: number;
   switch (duration) {
     case 'whl':
@@ -118,6 +124,7 @@ const calcDuration = (duration: Duration, dotted: Dotted, tempo: number, utility
       mod *= 1.75;
       break;
   }
+  if (triplet) mod *= 2 / 3;
   return (60 / tempo) * mod;
 };
 
@@ -296,8 +303,8 @@ const setAutoFilterFrequency = (
   let filterValue = filterModes.includes('lowpass')
     ? getLowPassValue(filterFrequency)
     : filterModes.includes('highpass')
-    ? getHighPassValue(filterFrequency)
-    : getBandPassValue(filterFrequency);
+      ? getHighPassValue(filterFrequency)
+      : getBandPassValue(filterFrequency);
   filterValue = Math.max(Math.min(filterValue + autoFilter, 2047), 0);
   filter.c64Frequency(filterValue, startTime);
   return filterValue;
@@ -561,7 +568,7 @@ const loadVoices = (
             detune,
             transpose
           );
-          const duration = calcDuration(cmd.data.duration, cmd.data.dotted, tempo, utilityDuration);
+          const duration = calcDuration(cmd.data.duration, cmd.data.dotted, tempo, utilityDuration, cmd.data.triplet);
           if (time >= currentTime + startTime && noteFrequency !== 0) {
             setFrequencyPortamentoVibrato(
               voices[voiceIndex],
