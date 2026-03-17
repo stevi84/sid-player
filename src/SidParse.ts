@@ -498,6 +498,7 @@ const getCommand = (byte1: number, byte2: number): Command | undefined => {
       return { type: 'ms#', data: { value: ((byte1 & 192) << 2) + byte2 } };
     }
     if (byte1 === 62 || byte1 === 126 || byte1 === 190 || byte1 === 254) {
+      // Jiffy length -200-757
       let value = (byte2 << 2) + ((byte1 & 192) >>> 6);
       if (byte2 > 192) value = (value << 22) >> 22;
       return {

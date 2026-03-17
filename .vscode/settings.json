@@ -9,11 +9,15 @@
     "PowerShell": {
       "source": "PowerShell",
       "icon": "terminal-powershell",
-      "args": [
-        "-ExecutionPolicy",
-        "Bypass"
-      ]
+      "args": ["-ExecutionPolicy", "Bypass"]
     }
   },
-  "terminal.integrated.defaultProfile.windows": "PowerShell"
+  "terminal.integrated.defaultProfile.windows": "PowerShell",
+  "github.copilot.nextEditSuggestions.enabled": false,
+  "github.copilot.enable": {
+    "*": false,
+    "plaintext": false,
+    "scminput": false,
+    "typescript": false
+  }
 }

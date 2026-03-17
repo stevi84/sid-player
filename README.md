@@ -82,7 +82,7 @@ pvd | Pulse-width vibrato depth | ✗
 pvr | Pulse-width vibrato rate | ✗
 utv | Utility voice | ✗
 hld | Hold time | ✗
-jif | Jiffy length | ✗
+jif | Jiffy length | ✓
 p&v | Portamento & vibrato | ✗
 rtp | Relative transposing | ✗
 

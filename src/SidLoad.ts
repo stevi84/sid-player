@@ -84,48 +84,54 @@ const calcDuration = (
   dotted: Dotted,
   tempo: number,
   utilityDuration: number,
-  triplet: boolean
+  triplet: boolean,
+  jif: number
 ): number => {
-  let mod: number;
-  switch (duration) {
-    case 'whl':
-      mod = 4;
-      break;
-    case 'hlf':
-      mod = 2;
-      break;
-    case 'qtr':
-    default:
-      mod = 1;
-      break;
-    case '8th':
-      mod = 1 / 2;
-      break;
-    case '16th':
-      mod = 1 / 4;
-      break;
-    case '32nd':
-      mod = 1 / 8;
-      break;
-    case '64th':
-      mod = 1 / 16;
-      break;
-    case 'utl':
-      return utilityDuration / 60;
+  let beats: number;
+  let jiffies: number;
+  if (duration === 'utl') {
+    jiffies = utilityDuration;
+  } else {
+    switch (duration) {
+      case 'whl':
+        beats = 4;
+        break;
+      case 'hlf':
+        beats = 2;
+        break;
+      case 'qtr':
+      default:
+        beats = 1;
+        break;
+      case '8th':
+        beats = 1 / 2;
+        break;
+      case '16th':
+        beats = 1 / 4;
+        break;
+      case '32nd':
+        beats = 1 / 8;
+        break;
+      case '64th':
+        beats = 1 / 16;
+        break;
+    }
+    switch (dotted) {
+      case 'non':
+      default:
+        break;
+      case 'sgl':
+        beats *= 1.5;
+        break;
+      case 'dbl':
+        beats *= 1.75;
+        break;
+    }
+    if (triplet) beats *= 2 / 3;
+    jiffies = (3600 / tempo) * beats;
   }
-  switch (dotted) {
-    case 'non':
-    default:
-      break;
-    case 'sgl':
-      mod *= 1.5;
-      break;
-    case 'dbl':
-      mod *= 1.75;
-      break;
-  }
-  if (triplet) mod *= 2 / 3;
-  return (60 / tempo) * mod;
+  const secsPerJiffy = (1 + jif / (266 + 2 / 3)) / 60;
+  return jiffies * secsPerJiffy;
 };
 
 const setFrequencyPortamentoVibrato = (
@@ -351,6 +357,7 @@ const loadVoices = (
   let tempo = 100;
   let volume = 8;
   let utilityDuration = 12;
+  let jiffy = 0;
 
   const voicesVars: Array<{
     cmdPointer: CommandPointer;
@@ -568,7 +575,14 @@ const loadVoices = (
             detune,
             transpose
           );
-          const duration = calcDuration(cmd.data.duration, cmd.data.dotted, tempo, utilityDuration, cmd.data.triplet);
+          const duration = calcDuration(
+            cmd.data.duration,
+            cmd.data.dotted,
+            tempo,
+            utilityDuration,
+            cmd.data.triplet,
+            jiffy
+          );
           if (time >= currentTime + startTime && noteFrequency !== 0) {
             setFrequencyPortamentoVibrato(
               voices[voiceIndex],
@@ -613,6 +627,9 @@ const loadVoices = (
             transpose
           );
           portamentoStartFrequency = absFrequency;
+          break;
+        case 'jif':
+          jiffy = cmd.data.value;
           break;
         default:
           console.error(`${cmd.type} not implemented`);
