@@ -85,12 +85,15 @@ const calcDuration = (
   tempo: number,
   utilityDuration: number,
   triplet: boolean,
-  jif: number
+  jif: number,
+  utilityVoice: number,
 ): number => {
   let beats: number;
   let jiffies: number;
   if (duration === 'utl') {
     jiffies = utilityDuration;
+  } else if (duration === 'utv') {
+    jiffies = utilityVoice;
   } else {
     switch (duration) {
       case 'whl':
@@ -133,6 +136,8 @@ const calcDuration = (
   const secsPerJiffy = (1 + jif / (266 + 2 / 3)) / 60;
   return jiffies * secsPerJiffy;
 };
+
+// Todo jif -> Changing the jiffy length also changes the sweep, portamento, vibrato, and modulation rates. Using the JIF command to double the tempo, for instance, also doubles the vibrato rate. 
 
 const setFrequencyPortamentoVibrato = (
   voice: SidVoice,
@@ -379,6 +384,8 @@ const loadVoices = (
     filterFrequencySweepRate: number;
     autoFilter: number;
     halt: boolean;
+    utilityVoice: number;
+    hold: number;
   }> = [];
   for (let i = 0; i < voices.length; i++) {
     voicesVars.push({
@@ -401,6 +408,8 @@ const loadVoices = (
       filterFrequencySweepRate: 0,
       autoFilter: 0,
       halt: false,
+      utilityVoice: 1,
+      hold: 0,
     });
   }
 
@@ -435,6 +444,8 @@ const loadVoices = (
       filterFrequencySweepRate,
       autoFilter,
       halt,
+      utilityVoice,
+      hold,
     } = voicesVars[voiceIndex];
     while (!halt && cmdPointer.index < voicesData[cmdPointer.voice].length && time <= globalTime) {
       const cmd = voicesData[cmdPointer.voice][cmdPointer.index];
@@ -581,7 +592,8 @@ const loadVoices = (
             tempo,
             utilityDuration,
             cmd.data.triplet,
-            jiffy
+            jiffy,
+            utilityVoice,
           );
           if (time >= currentTime + startTime && noteFrequency !== 0) {
             setFrequencyPortamentoVibrato(
@@ -631,6 +643,12 @@ const loadVoices = (
         case 'jif':
           jiffy = cmd.data.value;
           break;
+        case 'utv':
+          utilityVoice = cmd.data.value;
+          break;
+        case 'hld':
+          hold = cmd.data.value;
+          break;
         default:
           console.error(`${cmd.type} not implemented`);
           break;
@@ -657,6 +675,8 @@ const loadVoices = (
       filterFrequencySweepRate,
       autoFilter,
       halt,
+      utilityVoice,
+      hold,
     };
     if (time > globalTime) globalTime = time;
     voiceIndex++;

@@ -475,6 +475,7 @@ const getCommand = (byte1: number, byte2: number): Command | undefined => {
       return { type: 'max', data: { value: byte2 } };
     }
     if (byte1 === 246) {
+      // Utility vouce 0-255, default 1
       return { type: 'utv', data: { value: byte2 } };
     }
     if (byte1 === 14) {
@@ -491,6 +492,7 @@ const getCommand = (byte1: number, byte2: number): Command | undefined => {
       };
     }
     if (byte1 === 78) {
+      // Hold 0-255, default 0
       return { type: 'hld', data: { value: byte2 } };
     }
     if (byte1 === 30 || byte1 === 94 || byte1 === 158 || byte1 === 222) {

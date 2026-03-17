@@ -80,8 +80,8 @@ sca | Modulation scale | ✗
 max | Modulation maximum | ✗
 pvd | Pulse-width vibrato depth | ✗
 pvr | Pulse-width vibrato rate | ✗
-utv | Utility voice | ✗
-hld | Hold time | ✗
+utv | Utility voice | ✓
+hld | Hold time | ✓
 jif | Jiffy length | ✓
 p&v | Portamento & vibrato | ✗
 rtp | Relative transposing | ✗
