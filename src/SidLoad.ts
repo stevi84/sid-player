@@ -79,6 +79,8 @@ const calcFrequency = (
   return { index, frequency };
 };
 
+const jiffyLength = (jif: number): number => (1 + jif / (266 + 2 / 3)) / 60;
+
 const calcDuration = (
   duration: Duration,
   dotted: Dotted,
@@ -86,7 +88,7 @@ const calcDuration = (
   utilityDuration: number,
   triplet: boolean,
   jif: number,
-  utilityVoice: number,
+  utilityVoice: number
 ): number => {
   let beats: number;
   let jiffies: number;
@@ -133,11 +135,10 @@ const calcDuration = (
     if (triplet) beats *= 2 / 3;
     jiffies = (3600 / tempo) * beats;
   }
-  const secsPerJiffy = (1 + jif / (266 + 2 / 3)) / 60;
-  return jiffies * secsPerJiffy;
+  return jiffies * jiffyLength(jif);
 };
 
-// Todo jif -> Changing the jiffy length also changes the sweep, portamento, vibrato, and modulation rates. Using the JIF command to double the tempo, for instance, also doubles the vibrato rate. 
+// Todo jif -> Changing the jiffy length also changes the sweep, portamento, vibrato, and modulation rates. Using the JIF command to double the tempo, for instance, also doubles the vibrato rate.
 
 const setFrequencyPortamentoVibrato = (
   voice: SidVoice,
@@ -593,7 +594,7 @@ const loadVoices = (
             utilityDuration,
             cmd.data.triplet,
             jiffy,
-            utilityVoice,
+            utilityVoice
           );
           if (time >= currentTime + startTime && noteFrequency !== 0) {
             setFrequencyPortamentoVibrato(
@@ -618,12 +619,17 @@ const loadVoices = (
               );
             if (!tie) voices[voiceIndex].start(time - startTime);
             tie = cmd.data.tie;
-            if (!tie) voices[voiceIndex].stop(time - startTime + Math.max(duration - releasePoint / 60, 0));
+            // releaseTime: >= 0 (because hold >= 0), <= duration
+            const releaseTime = Math.min(
+              Math.max(duration - releasePoint * jiffyLength(jiffy), hold * jiffyLength(jiffy)),
+              duration
+            );
+            if (!tie) voices[voiceIndex].stop(time - startTime + releaseTime);
             // fill notes for display during playback
             if (noteIndex >= 0 && noteIndex <= 95)
               notes[voiceIndex].push({
                 start: time - currentTime,
-                stop: time - currentTime + Math.max(duration - releasePoint / 60, 0),
+                stop: time - currentTime + releaseTime,
                 index: noteIndex,
               });
           }
