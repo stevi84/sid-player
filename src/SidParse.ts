@@ -761,7 +761,37 @@ export const trans: { [key: number]: string } = {
   0xff: 'π', //'\u{3c0}', // GREEK SMALL LETTER PI
 };
 
-const readFileAsArrayBuffer = async (blob: Blob): Promise<ArrayBuffer> =>
+export const transWds: { [key: number]: string } = {
+  ...trans,
+  0xc1: 'a', //'\u{61}', // LATIN SMALL LETTER A
+  0xc2: 'b', //'\u{62}', // LATIN SMALL LETTER B
+  0xc3: 'c', //'\u{63}', // LATIN SMALL LETTER C
+  0xc4: 'd', //'\u{64}', // LATIN SMALL LETTER D
+  0xc5: 'e', //'\u{65}', // LATIN SMALL LETTER E
+  0xc6: 'f', //'\u{66}', // LATIN SMALL LETTER F
+  0xc7: 'g', //'\u{67}', // LATIN SMALL LETTER G
+  0xc8: 'h', //'\u{68}', // LATIN SMALL LETTER H
+  0xc9: 'i', //'\u{69}', // LATIN SMALL LETTER I
+  0xca: 'j', //'\u{6a}', // LATIN SMALL LETTER J
+  0xcb: 'k', //'\u{6b}', // LATIN SMALL LETTER K
+  0xcc: 'l', //'\u{6c}', // LATIN SMALL LETTER L
+  0xcd: 'm', //'\u{6d}', // LATIN SMALL LETTER M
+  0xce: 'n', //'\u{6e}', // LATIN SMALL LETTER N
+  0xcf: 'o', //'\u{6f}', // LATIN SMALL LETTER O
+  0xd0: 'p', //'\u{70}', // LATIN SMALL LETTER P
+  0xd1: 'q', //'\u{71}', // LATIN SMALL LETTER Q
+  0xd2: 'r', //'\u{72}', // LATIN SMALL LETTER R
+  0xd3: 's', //'\u{73}', // LATIN SMALL LETTER S
+  0xd4: 't', //'\u{74}', // LATIN SMALL LETTER T
+  0xd5: 'u', //'\u{75}', // LATIN SMALL LETTER U
+  0xd6: 'v', //'\u{76}', // LATIN SMALL LETTER V
+  0xd7: 'w', //'\u{77}', // LATIN SMALL LETTER W
+  0xd8: 'x', //'\u{78}', // LATIN SMALL LETTER X
+  0xd9: 'y', //'\u{79}', // LATIN SMALL LETTER Y
+  0xda: 'z', //'\u{7a}', // LATIN SMALL LETTER Z
+};
+
+export const readFileAsArrayBuffer = async (blob: Blob): Promise<ArrayBuffer> =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result as ArrayBuffer);

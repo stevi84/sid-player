@@ -1,6 +1,6 @@
 import { colorTable } from './C64CharMap';
-import { audioContext, Channel, connectMono, connectStereo, loadFile, NoteViz, reloadVoices } from './SidLoad';
-import { Command, trans } from './SidParse';
+import { audioContext, Channel, connectMono, connectStereo, Flag, loadFile, NoteViz, reloadVoices } from './SidLoad';
+import { Command, readFileAsArrayBuffer, trans, transWds } from './SidParse';
 
 const keyDivs: HTMLDivElement[] = [];
 for (let i = 0; i < 96; i++) keyDivs[i] = document.getElementById(`k${i}`) as HTMLDivElement;
@@ -27,6 +27,9 @@ type State = {
   notes: NoteViz[][];
   currentNotes: number[];
   text: number[];
+  flags: Flag[];
+  singAlongTitle: number[];
+  singAlongText: number[][];
   startTime: number;
   currentTime: number;
   audioContextStartTime: number;
@@ -43,6 +46,9 @@ const internalState: State = {
   notes: [[], [], [], [], [], []],
   currentNotes: [-1, -1, -1, -1, -1, -1],
   text: [],
+  flags: [],
+  singAlongTitle: [],
+  singAlongText: [],
   startTime: 0,
   currentTime: 0,
   audioContextStartTime: audioContext.currentTime,
@@ -64,6 +70,9 @@ const handler: ProxyHandler<State> = {
     }
     if (['text'].includes(property)) {
       updateUiText();
+    }
+    if (['flags', 'singAlongTitle', 'singAlongText', 'currentTime'].includes(property)) {
+      updateUiSingAlong();
     }
     if (['fileSelectValue', 'openFileValue'].includes(property)) {
       updateUiFileSelects();
@@ -332,6 +341,21 @@ const updateUiText = () => {
     textLines[i].append(...text[i]);
   }
 };
+const updateUiSingAlong = () => {
+  // Titel
+  // "FOR THE TIMES" -> ' FOR THE TIMES ' Leerzeichen links und rechts rot
+  // Schrifthintergrund orange, Schrift schwarz, bekommt der Title immer Anführungszeichen?
+  // kann man die Farbe des Titels ändern?
+  // Text
+  // aktuelle Zeile hellblau
+  // nächste Zeile dunkelblau
+  // Textfenster über dem anderen Textfenster
+  let text: string = '';
+  for (let i = 0; i < state.singAlong.length; i++) {
+    const byte = state.singAlong[i];
+    text += transWds[byte] || '?';
+  }
+};
 const updateUiFileSelects = () => {
   fileSelect.value = state.fileSelectValue;
   openFileLabel.textContent = state.openFileValue ? getFilenameFromString(state.openFileValue) : '--OPEN--';
@@ -368,6 +392,28 @@ const loadSidFile = async (channel: Channel, file: Blob) => {
   state.currentTime = 0;
   state.audioContextStartTime = audioContext.currentTime;
   state.isLoading = false;
+};
+
+const loadWdsFile = async (file: Blob) => {
+  // TODO auch andere states setzen?
+  const buffer = new DataView(await readFileAsArrayBuffer(file));
+  let line: number[] = [];
+  const lines: number[][] = [];
+  for (let i = 0; i < buffer.byteLength; i++) {
+    const byte = buffer.getUint8(i);
+    switch (byte) {
+      case 0xd:
+        // new line
+        lines.push(line);
+        line = [];
+        break;
+      default:
+        line.push(byte);
+        break;
+    }
+  }
+  state.singAlongTitle = lines[0];
+  state.singAlongText = lines.slice(1);
 };
 
 const clear = () => {
@@ -416,8 +462,9 @@ openFileInput.onchange = (e: Event) => {
         loadSidFile('left', file);
       } else if (file.name.toLowerCase().endsWith('.str')) {
         loadSidFile('right', file);
+      } else if (file.name.toLowerCase().endsWith('.wds')) {
+        loadWdsFile(file);
       }
-      // TODO wds file handling
     }
   }
 };
@@ -435,8 +482,9 @@ fileSelect.onchange = async (e: Event) => {
         loadSidFile('left', file);
       } else if (fileName.toLowerCase().endsWith('.str')) {
         loadSidFile('right', file);
+      } else if (fileName.toLowerCase().endsWith('.wds')) {
+        loadWdsFile(file);
       }
-      // TODO wds file handling
     }
   }
 };
