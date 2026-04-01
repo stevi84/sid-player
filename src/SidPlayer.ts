@@ -6,6 +6,9 @@ const keyDivs: HTMLDivElement[] = [];
 for (let i = 0; i < 96; i++) keyDivs[i] = document.getElementById(`k${i}`) as HTMLDivElement;
 const textLines: HTMLParagraphElement[] = [];
 for (let i = 0; i < 5; i++) textLines[i] = document.getElementById(`line${i}`) as HTMLParagraphElement;
+const singAlong = document.getElementById('singAlong') as HTMLDivElement;
+const singAlongLines: HTMLParagraphElement[] = [];
+for (let i = 0; i < 5; i++) textLines[i] = document.getElementById(`SingAlongLine${i}`) as HTMLParagraphElement;
 const fileSelect = document.getElementById('fileSelect') as HTMLSelectElement;
 const openFileLabel = document.getElementById('openFileLabel') as HTMLLabelElement;
 const openFileInput = document.getElementById('openFile') as HTMLInputElement;
@@ -138,8 +141,226 @@ const updateUiKeyboard = () => {
     }
   }
 };
+const getTextLine = (
+  bytes: number[],
+  color: string,
+  reverse: boolean
+): { line: HTMLSpanElement[]; color: string; reverse: boolean } => {
+  let line: HTMLSpanElement[] = [];
+  let pos: number = 0;
+
+  textLoop: for (const byte of bytes) {
+    switch (byte) {
+      case 0x0:
+        // end of text
+        break textLoop;
+      case 0x1:
+      case 0x2:
+      case 0x3:
+      case 0x4:
+        // ignored control characters
+        console.warn(`Ignored control character: ${byte}`);
+        break;
+      case 0x5:
+        // wht
+        color = colorTable['wht'].rgba();
+        break;
+      case 0x6:
+      case 0x7:
+      case 0x8:
+      case 0x9:
+      case 0xa:
+      case 0xb:
+      case 0xc:
+        // ignored control characters
+        console.warn(`Ignored control character: ${byte}`);
+        break;
+      case 0xd:
+        // new line
+        lineIndex++;
+        pos = 0;
+        reverse = false;
+        break;
+      case 0xe:
+      case 0xf:
+      case 0x10:
+      case 0x11:
+        // ignored control characters
+        console.warn(`Ignored control character: ${byte}`);
+        break;
+      case 0x12:
+        // rvsOn
+        reverse = true;
+        break;
+      case 0x13:
+        // ignored control character
+        console.warn(`Ignored control character: ${byte}`);
+        break;
+      case 0x14:
+        // del
+        if (pos > 0) {
+          text[lineIndex].splice(pos - 1, 1);
+          pos--;
+        } else {
+          console.warn('Cannot delete');
+        }
+        break;
+      case 0x15:
+      case 0x16:
+      case 0x17:
+      case 0x18:
+      case 0x19:
+      case 0x1a:
+      case 0x1b:
+        // ignored control characters
+        console.warn(`Ignored control character: ${byte}`);
+        break;
+      case 0x1c:
+        // red
+        color = colorTable['red'].rgba();
+        break;
+      case 0x1d:
+        // ignored control character
+        console.warn(`Ignored control character: ${byte}`);
+        break;
+      case 0x1e:
+        // grn
+        color = colorTable['grn'].rgba();
+        break;
+      case 0x1f:
+        // blu
+        color = colorTable['blu'].rgba();
+        break;
+      case 0x80:
+        // ignored control character
+        console.warn(`Ignored control character: ${byte}`);
+        break;
+      case 0x81:
+        // orng
+        color = colorTable['orng'].rgba();
+        break;
+      case 0x82:
+      case 0x83:
+      case 0x84:
+      case 0x85:
+      case 0x86:
+      case 0x87:
+      case 0x88:
+      case 0x89:
+      case 0x8a:
+      case 0x8b:
+      case 0x8c:
+      case 0x8d:
+      case 0x8e:
+      case 0x8f:
+        // ignored control characters
+        console.warn(`Ignored control character: ${byte}`);
+        break;
+      case 0x90:
+        // blk
+        color = colorTable['blk'].rgba();
+        break;
+      case 0x91:
+        // ignored control character
+        console.warn(`Ignored control character: ${byte}`);
+        break;
+      case 0x92:
+        // rvsOff
+        reverse = false;
+        break;
+      case 0x93:
+      case 0x94:
+        // ignored control characters
+        console.warn(`Ignored control character: ${byte}`);
+        break;
+      case 0x95:
+        // brn
+        color = colorTable['brn'].rgba();
+        break;
+      case 0x96:
+        // lred
+        color = colorTable['lred'].rgba();
+        break;
+      case 0x97:
+        // dgry
+        color = colorTable['dgry'].rgba();
+        break;
+      case 0x98:
+        // mgry
+        color = colorTable['mgry'].rgba();
+        break;
+      case 0x99:
+        // lgrn
+        color = colorTable['lgrn'].rgba();
+        break;
+      case 0x9a:
+        // lblu
+        color = colorTable['lblu'].rgba();
+        break;
+      case 0x9b:
+        // lgry
+        color = colorTable['lgry'].rgba();
+        break;
+      case 0x9c:
+        // pur
+        color = colorTable['pur'].rgba();
+        break;
+      case 0x9d:
+        // left
+        if (pos > 0) {
+          pos--;
+        } else {
+          console.warn('Cannot move left');
+        }
+        break;
+      case 0x9e:
+        // yel
+        color = colorTable['yel'].rgba();
+        break;
+      case 0x9f:
+        // cyn
+        color = colorTable['cyn'].rgba();
+        break;
+      default:
+        if (pos === text[lineIndex].length) {
+          text[lineIndex].push(getColoredText(trans[byte] || '?', color, reverse));
+          pos++;
+        } else {
+          text[lineIndex].splice(pos, 1, getColoredText(trans[byte] || '?', color, reverse));
+          pos++;
+        }
+        break;
+    }
+  }
+
+  for (let i = 0; i < 5; i++) {
+    text[i].length < 32 &&
+      text[i].push(
+        ...Array(32 - text[i].length)
+          .fill(' ')
+          .map((e) => getColoredText(e, color, false))
+      );
+    textLines[i].append(...text[i]);
+  }
+};
 const updateUiText = () => {
   for (let i = 0; i < 5; i++) textLines[i].textContent = '';
+
+  let line: number[] = [];
+  const lines: number[][] = [];
+  for (let i = 0; i < buffer.byteLength; i++) {
+    const byte = buffer.getUint8(i);
+    switch (byte) {
+      case 0xd:
+        // new line
+        lines.push(line);
+        line = [];
+        break;
+      default:
+        line.push(byte);
+        break;
+    }
+  }
 
   let text: HTMLSpanElement[][] = [[], [], [], [], []];
   let lineIndex: number = 0;
@@ -350,6 +571,10 @@ const updateUiSingAlong = () => {
   // aktuelle Zeile hellblau
   // nächste Zeile dunkelblau
   // Textfenster über dem anderen Textfenster
+  if (state.singAlongTitle.length === 0 || state.singAlongText.length === 0) {
+    singAlong.style.height = '0px';
+    return;
+  }
   let text: string = '';
   for (let i = 0; i < state.singAlong.length; i++) {
     const byte = state.singAlong[i];
