@@ -87,7 +87,7 @@ body {
   width: calc(75% / 7);
   height: 66%;
 }
-.text {
+.text,.singAlongText {
   text-align: left;
   display: flex;
   flex-direction: column;
@@ -106,10 +106,18 @@ body {
 }
 @media (orientation: portrait) {
   .text {
-    height: calc(5*9px + 4px);
-    min-height: calc(5*9px + 4px);
-    width: calc(32*9px);
-    font-size: 9px;
+    --font-size: 9px;
+    height: calc(5*var(--font-size) + 4px);
+    min-height: calc(5*var(--font-size) + 4px);
+    width: calc(32*var(--font-size));
+    font-size: var(--font-size);
+  }
+  .singAlongText {
+    --font-size: 8px;
+    height: calc(5*var(--font-size) + 4px);
+    min-height: calc(5*var(--font-size) + 4px);
+    width: calc(38*var(--font-size));
+    font-size: var(--font-size);
   }
   #fileSelect, .customOpenFile, .clearButton, #current, #duration {
     font-size: 13px;
@@ -123,10 +131,18 @@ body {
 }
 @media (orientation: landscape) {
   .text {
-    height: calc(5*16px + 4px);
-    min-height: calc(5*16px + 4px);
-    width: calc(32*16px);
-    font-size: 16px;
+    --font-size: 16px;
+    height: calc(5*var(--font-size) + 4px);
+    min-height: calc(5*var(--font-size) + 4px);
+    width: calc(32*var(--font-size));
+    font-size: var(--font-size);
+  }
+  .singAlongText {
+    --font-size: 16px;
+    height: calc(5*var(--font-size) + 4px);
+    min-height: calc(5*var(--font-size) + 4px);
+    width: calc(38*var(--font-size));
+    font-size: var(--font-size);
   }
   #fileSelect, .customOpenFile, .clearButton, #current, #duration {
     font-size: 16px;

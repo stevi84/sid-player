@@ -1,9 +1,10 @@
 import { colorTable } from './C64CharMap';
-import { audioContext, Channel, connectMono, connectStereo, loadFile, NoteViz, reloadVoices } from './SidLoad';
-import { Command, trans } from './SidParse';
+import { audioContext, Channel, connectMono, connectStereo, Flag, loadFile, NoteViz, reloadVoices } from './SidLoad';
+import { Command, readFileAsArrayBuffer, trans, transWds } from './SidParse';
 
 const keyDivs: HTMLDivElement[] = [];
 for (let i = 0; i < 96; i++) keyDivs[i] = document.getElementById(`k${i}`) as HTMLDivElement;
+const text: HTMLDivElement = document.getElementById('text') as HTMLDivElement;
 const textLines: HTMLParagraphElement[] = [];
 for (let i = 0; i < 5; i++) textLines[i] = document.getElementById(`line${i}`) as HTMLParagraphElement;
 const fileSelect = document.getElementById('fileSelect') as HTMLSelectElement;
@@ -27,6 +28,10 @@ type State = {
   notes: NoteViz[][];
   currentNotes: number[];
   text: number[];
+  flags: Flag[];
+  currentFlag: number;
+  singAlongTitle: number[];
+  singAlongText: number[][];
   startTime: number;
   currentTime: number;
   audioContextStartTime: number;
@@ -43,6 +48,10 @@ const internalState: State = {
   notes: [[], [], [], [], [], []],
   currentNotes: [-1, -1, -1, -1, -1, -1],
   text: [],
+  flags: [],
+  currentFlag: -1,
+  singAlongTitle: [],
+  singAlongText: [],
   startTime: 0,
   currentTime: 0,
   audioContextStartTime: audioContext.currentTime,
@@ -62,7 +71,7 @@ const handler: ProxyHandler<State> = {
     if (['notes', 'currentNotes', 'currentTime'].includes(property)) {
       updateUiKeyboard();
     }
-    if (['text'].includes(property)) {
+    if (['text', 'flags', 'singAlongTitle', 'singAlongText', 'currentTime'].includes(property)) {
       updateUiText();
     }
     if (['fileSelectValue', 'openFileValue'].includes(property)) {
@@ -109,36 +118,17 @@ const getColoredText = (text: string, textColor: string, reverse: boolean) => {
 
 const getFilenameFromString = (path: string): string => path.replace(/^.*[\\/]/, '');
 
-const updateUiKeyboard = () => {
-  for (let i = 0; i < 6; i++) {
-    if (state.notes[i].length !== 0) {
-      const currentTime = state.currentTime;
-      const note: NoteViz | undefined = state.currentNotes[i] >= 0 ? state.notes[i][state.currentNotes[i]] : undefined;
-      if (!note || currentTime < note.start || currentTime >= note.stop) {
-        clearKeyColor((note && note.index) || -1);
-        let index: number = -1;
-        for (let j = 0; j < state.notes[i].length; j++) {
-          if (currentTime >= state.notes[i][j].start && currentTime < state.notes[i][j].stop) {
-            index = j;
-            break;
-          }
-        }
-        internalState.currentNotes[i] = index;
-        if (index > 0) setKeyColor(state.notes[i][index].index, i);
-      }
-    }
-  }
-};
-const updateUiText = () => {
-  for (let i = 0; i < 5; i++) textLines[i].textContent = '';
-
-  let text: HTMLSpanElement[][] = [[], [], [], [], []];
-  let lineIndex: number = 0;
+const getTextLine = (
+  bytes: number[],
+  color: string,
+  trans: { [key: number]: string },
+  lineLength: number = 32
+): { line: HTMLSpanElement[]; color: string } => {
+  let line: HTMLSpanElement[] = [];
   let pos: number = 0;
-  let color: string = colorTable['wht'].rgba();
   let reverse: boolean = false;
 
-  textLoop: for (const byte of state.text) {
+  textLoop: for (const byte of bytes) {
     switch (byte) {
       case 0x0:
         // end of text
@@ -166,10 +156,7 @@ const updateUiText = () => {
         break;
       case 0xd:
         // new line
-        lineIndex++;
-        pos = 0;
-        reverse = false;
-        break;
+        break textLoop;
       case 0xe:
       case 0xf:
       case 0x10:
@@ -188,7 +175,7 @@ const updateUiText = () => {
       case 0x14:
         // del
         if (pos > 0) {
-          text[lineIndex].splice(pos - 1, 1);
+          line.splice(pos - 1, 1);
           pos--;
         } else {
           console.warn('Cannot delete');
@@ -311,25 +298,157 @@ const updateUiText = () => {
         color = colorTable['cyn'].rgba();
         break;
       default:
-        if (pos === text[lineIndex].length) {
-          text[lineIndex].push(getColoredText(trans[byte] || '?', color, reverse));
+        if (pos === line.length) {
+          line.push(getColoredText(trans[byte] || '?', color, reverse));
           pos++;
         } else {
-          text[lineIndex].splice(pos, 1, getColoredText(trans[byte] || '?', color, reverse));
+          line.splice(pos, 1, getColoredText(trans[byte] || '?', color, reverse));
           pos++;
         }
         break;
     }
   }
 
-  for (let i = 0; i < 5; i++) {
-    text[i].length < 32 &&
-      text[i].push(
-        ...Array(32 - text[i].length)
-          .fill(' ')
-          .map((e) => getColoredText(e, color, false))
-      );
-    textLines[i].append(...text[i]);
+  line.length < lineLength &&
+    line.push(
+      ...Array(lineLength - line.length)
+        .fill(' ')
+        .map((e) => getColoredText(e, color, false))
+    );
+
+  return { line, color };
+};
+
+const updateUiKeyboard = () => {
+  for (let i = 0; i < 6; i++) {
+    if (state.notes[i].length !== 0) {
+      const currentTime = state.currentTime;
+      const note: NoteViz | undefined = state.currentNotes[i] >= 0 ? state.notes[i][state.currentNotes[i]] : undefined;
+      if (!note || currentTime < note.start || currentTime >= note.stop) {
+        clearKeyColor((note && note.index) || -1);
+        let index: number = -1;
+        for (let j = 0; j < state.notes[i].length; j++) {
+          if (currentTime >= state.notes[i][j].start && currentTime < state.notes[i][j].stop) {
+            index = j;
+            break;
+          }
+        }
+        internalState.currentNotes[i] = index;
+        if (index > 0) setKeyColor(state.notes[i][index].index, i);
+      }
+    }
+  }
+};
+const updateUiText = () => {
+  if (state.currentTime === 0 || state.singAlongText.length === 0) {
+    // text from sid file
+    // when there is a wds file this is shown only in the very beginning
+    for (let i = 0; i < 5; i++) textLines[i].textContent = '';
+    text.classList.remove('singAlongText');
+    text.classList.add('text');
+    internalState.currentFlag = -1;
+
+    let line: number[] = [];
+    const lines: number[][] = [];
+    for (let i = 0; i < state.text.length; i++) {
+      const byte = state.text[i];
+      switch (byte) {
+        case 0xd:
+          // new line
+          lines.push(line);
+          line = [];
+          break;
+        default:
+          line.push(byte);
+          break;
+      }
+    }
+
+    let color: string = colorTable['wht'].rgba();
+    for (let i = 0; i < 5; i++) {
+      const { line: textLine, color: returnColor } = getTextLine(lines[i] || [], color, trans);
+      textLines[i].append(...textLine);
+      color = returnColor;
+    }
+  } else {
+    // text from wds file
+    const currentTime = state.currentTime;
+    const flag: Flag | undefined = state.currentFlag >= 0 ? state.flags[state.currentFlag] : undefined;
+    if (!flag || currentTime < flag.start || currentTime >= flag.stop) {
+      for (let i = 0; i < 5; i++) textLines[i].textContent = '';
+      text.classList.remove('text');
+      text.classList.add('singAlongText');
+      
+      let index: number = -1;
+      for (let i = 0; i < state.flags.length; i++) {
+        if (currentTime >= state.flags[i].start && currentTime < state.flags[i].stop) {
+          index = i;
+          break;
+        }
+      }
+      internalState.currentFlag = index;
+
+      if (index >= 0) {
+        // after the first flg, the text lines are shown
+        for (let i = 0; i < 5; i++) {
+          let line: HTMLSpanElement[];
+          switch (i) {
+            case 1:
+              ({ line } = getTextLine(state.singAlongText[index] || [], colorTable['lblu'].rgba(), transWds, 38));
+              break;
+            case 3:
+              if (index < state.flags.length) {
+                ({ line } = getTextLine(state.singAlongText[index + 1] || [], colorTable['blu'].rgba(), transWds, 38));
+              } else {
+                ({ line } = getTextLine([], colorTable['wht'].rgba(), transWds, 38));
+              }
+              break;
+            default:
+              ({ line } = getTextLine([], colorTable['wht'].rgba(), transWds, 38));
+              break;
+          }
+          textLines[i].append(...line);
+        }
+      } else {
+        // before the first flag the title is shown
+        for (let i = 0; i < 5; i++) {
+          let textLine: HTMLSpanElement[];
+          switch (i) {
+            case 1:
+              // red frame top
+              const topLine = new Array(state.singAlongTitle.length + 2).fill(0xa4 /*bottomline*/);
+              // spaces to center title
+              topLine.unshift(...new Array(Math.floor((38 - state.singAlongTitle.length)/2)).fill(0x20 /*space*/));
+              ({ line: textLine } = getTextLine(topLine, colorTable['red'].rgba(), transWds, 38));
+              break;
+            case 2:
+              let title: number[] = [];
+              if (state.singAlongTitle) {
+                title = state.singAlongTitle.slice();
+                // red frame left
+                title.unshift(0x12 /*reverse on*/, 0x1c /*red*/, 0x20 /*space*/, 0x81 /*orange*/);
+                // red frame right
+                title.push(0x1c /*red*/, 0x20 /*space*/);
+                // spaces to center title
+                title.unshift(...new Array(Math.floor((38 - state.singAlongTitle.length)/2)).fill(0x20));
+              }
+              ({ line: textLine } = getTextLine(title, colorTable['orng'].rgba(), transWds, 38));
+              break;
+            case 3:
+              // red frame bottom
+              const bottomLine = new Array(state.singAlongTitle.length + 2).fill(0xa3 /*topline*/);
+              // spaces to center title
+              bottomLine.unshift(...new Array(Math.floor((38 - state.singAlongTitle.length)/2)).fill(0x20 /*space*/));
+              ({ line: textLine } = getTextLine(bottomLine, colorTable['red'].rgba(), transWds, 38));
+              break;
+            default:
+              ({ line: textLine } = getTextLine([], colorTable['wht'].rgba(), transWds, 38));
+              break;
+          }
+          textLines[i].append(...textLine);
+        }
+      }
+    }
   }
 };
 const updateUiFileSelects = () => {
@@ -351,7 +470,7 @@ const loadSidFile = async (channel: Channel, file: Blob) => {
   pause();
   state.isLoading = true;
   state.isPlaying = false;
-  const { voicesData, duration, text, notes } = await loadFile(channel, file);
+  const { voicesData, duration, text, notes, flags } = await loadFile(channel, file);
   if (channel === 'right') {
     state.durationRight = duration;
     state.voicesDataRight = voicesData;
@@ -363,11 +482,34 @@ const loadSidFile = async (channel: Channel, file: Blob) => {
     state.notes = [notes[0], notes[1], notes[2], state.notes[3], state.notes[4], state.notes[5]];
     state.currentNotes = [-1, -1, -1, state.currentNotes[3], state.currentNotes[4], state.currentNotes[5]];
     state.text = text;
+    state.flags = flags;
   }
   state.startTime = 0;
   state.currentTime = 0;
   state.audioContextStartTime = audioContext.currentTime;
   state.isLoading = false;
+};
+
+const loadWdsFile = async (file: Blob) => {
+  const buffer = new DataView(await readFileAsArrayBuffer(file));
+  let line: number[] = [];
+  const lines: number[][] = [];
+  for (let i = 0; i < buffer.byteLength; i++) {
+    const byte = buffer.getUint8(i);
+    switch (byte) {
+      case 0xd:
+        // new line
+        lines.push(line);
+        line = [];
+        break;
+      default:
+        line.push(byte);
+        break;
+    }
+  }
+  // remove apostrophes from beginning and end
+  state.singAlongTitle = lines[0].slice(1, -1);
+  state.singAlongText = lines.slice(1);
 };
 
 const clear = () => {
@@ -398,6 +540,10 @@ const clear = () => {
     0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
     0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x0,
   ];
+  state.flags = [];
+  state.currentFlag = -1;
+  state.singAlongTitle = [];
+  state.singAlongText = [];
   state.startTime = 0;
   state.currentTime = 0;
   state.audioContextStartTime = audioContext.currentTime;
@@ -416,8 +562,9 @@ openFileInput.onchange = (e: Event) => {
         loadSidFile('left', file);
       } else if (file.name.toLowerCase().endsWith('.str')) {
         loadSidFile('right', file);
+      } else if (file.name.toLowerCase().endsWith('.wds')) {
+        loadWdsFile(file);
       }
-      // TODO wds file handling
     }
   }
 };
@@ -435,8 +582,9 @@ fileSelect.onchange = async (e: Event) => {
         loadSidFile('left', file);
       } else if (fileName.toLowerCase().endsWith('.str')) {
         loadSidFile('right', file);
+      } else if (fileName.toLowerCase().endsWith('.wds')) {
+        loadWdsFile(file);
       }
-      // TODO wds file handling
     }
   }
 };

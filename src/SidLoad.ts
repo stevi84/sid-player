@@ -347,16 +347,18 @@ const logVoices = (voicesData: Command[][]) => {
 type CommandPointer = { voice: number; index: number };
 type PhraseDefinition = { index: number; pointer: CommandPointer };
 export type NoteViz = { start: number; stop: number; index: number };
+export type Flag = { start: number; stop: number; value: number };
 
 const loadVoices = (
   sid: SidClass,
   voicesData: Command[][],
   startTime: number
-): { duration: number; notes: NoteViz[][] } => {
+): { duration: number; notes: NoteViz[][]; flags: Flag[] } => {
   const voices = sid.voices;
   initVoices(sid);
 
   const notes: NoteViz[][] = [[], [], []];
+  const flags: Flag[] = [];
 
   const currentTime = audioContext.currentTime;
   let globalTime = currentTime;
@@ -572,6 +574,8 @@ const loadVoices = (
           break;
         case 'flg':
           // For communication from Sidplayer to the BASIC program, the FLG command is available.
+          if (flags.length > 0) flags.at(-1)!.stop = time - currentTime;
+          flags.push({ start: time - currentTime, stop: Number.POSITIVE_INFINITY, value: cmd.data.value });
           break;
         case 'hlt':
           halt = true;
@@ -689,7 +693,7 @@ const loadVoices = (
     if (voiceIndex >= voices.length) voiceIndex = 0;
   } while (voicesVars.some((v) => !v.halt && v.cmdPointer.index < voicesData[v.cmdPointer.voice].length));
 
-  return { duration: Math.floor(Math.max(...voicesVars.map((v) => v.time - currentTime)) * 10) / 10, notes };
+  return { duration: Math.floor(Math.max(...voicesVars.map((v) => v.time - currentTime)) * 10) / 10, notes, flags };
 };
 
 export type Channel = 'left' | 'right';
@@ -697,17 +701,17 @@ export type Channel = 'left' | 'right';
 export const loadFile = async (
   channel: Channel,
   file: Blob
-): Promise<{ voicesData: Command[][]; duration: number; text: number[]; notes: NoteViz[][] }> => {
+): Promise<{ voicesData: Command[][]; duration: number; text: number[]; notes: NoteViz[][]; flags: Flag[] }> => {
   const sidData = await parseSid(file);
-  const { duration, notes } = reloadVoices(channel, sidData.voices, 0);
-  return { voicesData: sidData.voices, duration, text: sidData.text, notes };
+  const { duration, notes, flags } = reloadVoices(channel, sidData.voices, 0);
+  return { voicesData: sidData.voices, duration, text: sidData.text, notes, flags };
 };
 
 export const reloadVoices = (
   channel: Channel,
   voicesData: Command[][],
   startTime: number
-): { duration: number; notes: NoteViz[][] } => {
+): { duration: number; notes: NoteViz[][]; flags: Flag[] } => {
   const sid = channel === 'right' ? sidRight : sidLeft;
   sid.reset(0);
   // logVoices(voicesData);
