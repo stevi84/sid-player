@@ -4,11 +4,9 @@ import { Command, readFileAsArrayBuffer, trans, transWds } from './SidParse';
 
 const keyDivs: HTMLDivElement[] = [];
 for (let i = 0; i < 96; i++) keyDivs[i] = document.getElementById(`k${i}`) as HTMLDivElement;
+const text: HTMLDivElement = document.getElementById('text') as HTMLDivElement;
 const textLines: HTMLParagraphElement[] = [];
 for (let i = 0; i < 5; i++) textLines[i] = document.getElementById(`line${i}`) as HTMLParagraphElement;
-const singAlong = document.getElementById('singAlong') as HTMLDivElement;
-const singAlongLines: HTMLParagraphElement[] = [];
-for (let i = 0; i < 5; i++) textLines[i] = document.getElementById(`SingAlongLine${i}`) as HTMLParagraphElement;
 const fileSelect = document.getElementById('fileSelect') as HTMLSelectElement;
 const openFileLabel = document.getElementById('openFileLabel') as HTMLLabelElement;
 const openFileInput = document.getElementById('openFile') as HTMLInputElement;
@@ -31,6 +29,7 @@ type State = {
   currentNotes: number[];
   text: number[];
   flags: Flag[];
+  currentFlag: number;
   singAlongTitle: number[];
   singAlongText: number[][];
   startTime: number;
@@ -50,6 +49,7 @@ const internalState: State = {
   currentNotes: [-1, -1, -1, -1, -1, -1],
   text: [],
   flags: [],
+  currentFlag: -1,
   singAlongTitle: [],
   singAlongText: [],
   startTime: 0,
@@ -71,11 +71,8 @@ const handler: ProxyHandler<State> = {
     if (['notes', 'currentNotes', 'currentTime'].includes(property)) {
       updateUiKeyboard();
     }
-    if (['text'].includes(property)) {
+    if (['text', 'flags', 'singAlongTitle', 'singAlongText', 'currentTime'].includes(property)) {
       updateUiText();
-    }
-    if (['flags', 'singAlongTitle', 'singAlongText', 'currentTime'].includes(property)) {
-      updateUiSingAlong();
     }
     if (['fileSelectValue', 'openFileValue'].includes(property)) {
       updateUiFileSelects();
@@ -121,33 +118,15 @@ const getColoredText = (text: string, textColor: string, reverse: boolean) => {
 
 const getFilenameFromString = (path: string): string => path.replace(/^.*[\\/]/, '');
 
-const updateUiKeyboard = () => {
-  for (let i = 0; i < 6; i++) {
-    if (state.notes[i].length !== 0) {
-      const currentTime = state.currentTime;
-      const note: NoteViz | undefined = state.currentNotes[i] >= 0 ? state.notes[i][state.currentNotes[i]] : undefined;
-      if (!note || currentTime < note.start || currentTime >= note.stop) {
-        clearKeyColor((note && note.index) || -1);
-        let index: number = -1;
-        for (let j = 0; j < state.notes[i].length; j++) {
-          if (currentTime >= state.notes[i][j].start && currentTime < state.notes[i][j].stop) {
-            index = j;
-            break;
-          }
-        }
-        internalState.currentNotes[i] = index;
-        if (index > 0) setKeyColor(state.notes[i][index].index, i);
-      }
-    }
-  }
-};
 const getTextLine = (
   bytes: number[],
   color: string,
-  reverse: boolean
-): { line: HTMLSpanElement[]; color: string; reverse: boolean } => {
+  trans: { [key: number]: string },
+  lineLength: number = 32
+): { line: HTMLSpanElement[]; color: string } => {
   let line: HTMLSpanElement[] = [];
   let pos: number = 0;
+  let reverse: boolean = false;
 
   textLoop: for (const byte of bytes) {
     switch (byte) {
@@ -177,10 +156,7 @@ const getTextLine = (
         break;
       case 0xd:
         // new line
-        lineIndex++;
-        pos = 0;
-        reverse = false;
-        break;
+        break textLoop;
       case 0xe:
       case 0xf:
       case 0x10:
@@ -199,7 +175,7 @@ const getTextLine = (
       case 0x14:
         // del
         if (pos > 0) {
-          text[lineIndex].splice(pos - 1, 1);
+          line.splice(pos - 1, 1);
           pos--;
         } else {
           console.warn('Cannot delete');
@@ -322,263 +298,157 @@ const getTextLine = (
         color = colorTable['cyn'].rgba();
         break;
       default:
-        if (pos === text[lineIndex].length) {
-          text[lineIndex].push(getColoredText(trans[byte] || '?', color, reverse));
+        if (pos === line.length) {
+          line.push(getColoredText(trans[byte] || '?', color, reverse));
           pos++;
         } else {
-          text[lineIndex].splice(pos, 1, getColoredText(trans[byte] || '?', color, reverse));
+          line.splice(pos, 1, getColoredText(trans[byte] || '?', color, reverse));
           pos++;
         }
         break;
     }
   }
 
-  for (let i = 0; i < 5; i++) {
-    text[i].length < 32 &&
-      text[i].push(
-        ...Array(32 - text[i].length)
-          .fill(' ')
-          .map((e) => getColoredText(e, color, false))
-      );
-    textLines[i].append(...text[i]);
+  line.length < lineLength &&
+    line.push(
+      ...Array(lineLength - line.length)
+        .fill(' ')
+        .map((e) => getColoredText(e, color, false))
+    );
+
+  return { line, color };
+};
+
+const updateUiKeyboard = () => {
+  for (let i = 0; i < 6; i++) {
+    if (state.notes[i].length !== 0) {
+      const currentTime = state.currentTime;
+      const note: NoteViz | undefined = state.currentNotes[i] >= 0 ? state.notes[i][state.currentNotes[i]] : undefined;
+      if (!note || currentTime < note.start || currentTime >= note.stop) {
+        clearKeyColor((note && note.index) || -1);
+        let index: number = -1;
+        for (let j = 0; j < state.notes[i].length; j++) {
+          if (currentTime >= state.notes[i][j].start && currentTime < state.notes[i][j].stop) {
+            index = j;
+            break;
+          }
+        }
+        internalState.currentNotes[i] = index;
+        if (index > 0) setKeyColor(state.notes[i][index].index, i);
+      }
+    }
   }
 };
 const updateUiText = () => {
-  for (let i = 0; i < 5; i++) textLines[i].textContent = '';
+  if (state.currentTime === 0 || state.singAlongText.length === 0) {
+    // text from sid file
+    // when there is a wds file this is shown only in the very beginning
+    for (let i = 0; i < 5; i++) textLines[i].textContent = '';
+    text.classList.remove('singAlongText');
+    text.classList.add('text');
+    internalState.currentFlag = -1;
 
-  let line: number[] = [];
-  const lines: number[][] = [];
-  for (let i = 0; i < buffer.byteLength; i++) {
-    const byte = buffer.getUint8(i);
-    switch (byte) {
-      case 0xd:
-        // new line
-        lines.push(line);
-        line = [];
-        break;
-      default:
-        line.push(byte);
-        break;
+    let line: number[] = [];
+    const lines: number[][] = [];
+    for (let i = 0; i < state.text.length; i++) {
+      const byte = state.text[i];
+      switch (byte) {
+        case 0xd:
+          // new line
+          lines.push(line);
+          line = [];
+          break;
+        default:
+          line.push(byte);
+          break;
+      }
     }
-  }
 
-  let text: HTMLSpanElement[][] = [[], [], [], [], []];
-  let lineIndex: number = 0;
-  let pos: number = 0;
-  let color: string = colorTable['wht'].rgba();
-  let reverse: boolean = false;
-
-  textLoop: for (const byte of state.text) {
-    switch (byte) {
-      case 0x0:
-        // end of text
-        break textLoop;
-      case 0x1:
-      case 0x2:
-      case 0x3:
-      case 0x4:
-        // ignored control characters
-        console.warn(`Ignored control character: ${byte}`);
-        break;
-      case 0x5:
-        // wht
-        color = colorTable['wht'].rgba();
-        break;
-      case 0x6:
-      case 0x7:
-      case 0x8:
-      case 0x9:
-      case 0xa:
-      case 0xb:
-      case 0xc:
-        // ignored control characters
-        console.warn(`Ignored control character: ${byte}`);
-        break;
-      case 0xd:
-        // new line
-        lineIndex++;
-        pos = 0;
-        reverse = false;
-        break;
-      case 0xe:
-      case 0xf:
-      case 0x10:
-      case 0x11:
-        // ignored control characters
-        console.warn(`Ignored control character: ${byte}`);
-        break;
-      case 0x12:
-        // rvsOn
-        reverse = true;
-        break;
-      case 0x13:
-        // ignored control character
-        console.warn(`Ignored control character: ${byte}`);
-        break;
-      case 0x14:
-        // del
-        if (pos > 0) {
-          text[lineIndex].splice(pos - 1, 1);
-          pos--;
-        } else {
-          console.warn('Cannot delete');
-        }
-        break;
-      case 0x15:
-      case 0x16:
-      case 0x17:
-      case 0x18:
-      case 0x19:
-      case 0x1a:
-      case 0x1b:
-        // ignored control characters
-        console.warn(`Ignored control character: ${byte}`);
-        break;
-      case 0x1c:
-        // red
-        color = colorTable['red'].rgba();
-        break;
-      case 0x1d:
-        // ignored control character
-        console.warn(`Ignored control character: ${byte}`);
-        break;
-      case 0x1e:
-        // grn
-        color = colorTable['grn'].rgba();
-        break;
-      case 0x1f:
-        // blu
-        color = colorTable['blu'].rgba();
-        break;
-      case 0x80:
-        // ignored control character
-        console.warn(`Ignored control character: ${byte}`);
-        break;
-      case 0x81:
-        // orng
-        color = colorTable['orng'].rgba();
-        break;
-      case 0x82:
-      case 0x83:
-      case 0x84:
-      case 0x85:
-      case 0x86:
-      case 0x87:
-      case 0x88:
-      case 0x89:
-      case 0x8a:
-      case 0x8b:
-      case 0x8c:
-      case 0x8d:
-      case 0x8e:
-      case 0x8f:
-        // ignored control characters
-        console.warn(`Ignored control character: ${byte}`);
-        break;
-      case 0x90:
-        // blk
-        color = colorTable['blk'].rgba();
-        break;
-      case 0x91:
-        // ignored control character
-        console.warn(`Ignored control character: ${byte}`);
-        break;
-      case 0x92:
-        // rvsOff
-        reverse = false;
-        break;
-      case 0x93:
-      case 0x94:
-        // ignored control characters
-        console.warn(`Ignored control character: ${byte}`);
-        break;
-      case 0x95:
-        // brn
-        color = colorTable['brn'].rgba();
-        break;
-      case 0x96:
-        // lred
-        color = colorTable['lred'].rgba();
-        break;
-      case 0x97:
-        // dgry
-        color = colorTable['dgry'].rgba();
-        break;
-      case 0x98:
-        // mgry
-        color = colorTable['mgry'].rgba();
-        break;
-      case 0x99:
-        // lgrn
-        color = colorTable['lgrn'].rgba();
-        break;
-      case 0x9a:
-        // lblu
-        color = colorTable['lblu'].rgba();
-        break;
-      case 0x9b:
-        // lgry
-        color = colorTable['lgry'].rgba();
-        break;
-      case 0x9c:
-        // pur
-        color = colorTable['pur'].rgba();
-        break;
-      case 0x9d:
-        // left
-        if (pos > 0) {
-          pos--;
-        } else {
-          console.warn('Cannot move left');
-        }
-        break;
-      case 0x9e:
-        // yel
-        color = colorTable['yel'].rgba();
-        break;
-      case 0x9f:
-        // cyn
-        color = colorTable['cyn'].rgba();
-        break;
-      default:
-        if (pos === text[lineIndex].length) {
-          text[lineIndex].push(getColoredText(trans[byte] || '?', color, reverse));
-          pos++;
-        } else {
-          text[lineIndex].splice(pos, 1, getColoredText(trans[byte] || '?', color, reverse));
-          pos++;
-        }
-        break;
+    let color: string = colorTable['wht'].rgba();
+    for (let i = 0; i < 5; i++) {
+      const { line: textLine, color: returnColor } = getTextLine(lines[i] || [], color, trans);
+      textLines[i].append(...textLine);
+      color = returnColor;
     }
-  }
+  } else {
+    // text from wds file
+    const currentTime = state.currentTime;
+    const flag: Flag | undefined = state.currentFlag >= 0 ? state.flags[state.currentFlag] : undefined;
+    if (!flag || currentTime < flag.start || currentTime >= flag.stop) {
+      for (let i = 0; i < 5; i++) textLines[i].textContent = '';
+      text.classList.remove('text');
+      text.classList.add('singAlongText');
+      
+      let index: number = -1;
+      for (let i = 0; i < state.flags.length; i++) {
+        if (currentTime >= state.flags[i].start && currentTime < state.flags[i].stop) {
+          index = i;
+          break;
+        }
+      }
+      internalState.currentFlag = index;
 
-  for (let i = 0; i < 5; i++) {
-    text[i].length < 32 &&
-      text[i].push(
-        ...Array(32 - text[i].length)
-          .fill(' ')
-          .map((e) => getColoredText(e, color, false))
-      );
-    textLines[i].append(...text[i]);
-  }
-};
-const updateUiSingAlong = () => {
-  // Titel
-  // "FOR THE TIMES" -> ' FOR THE TIMES ' Leerzeichen links und rechts rot
-  // Schrifthintergrund orange, Schrift schwarz, bekommt der Title immer Anführungszeichen?
-  // kann man die Farbe des Titels ändern?
-  // Text
-  // aktuelle Zeile hellblau
-  // nächste Zeile dunkelblau
-  // Textfenster über dem anderen Textfenster
-  if (state.singAlongTitle.length === 0 || state.singAlongText.length === 0) {
-    singAlong.style.height = '0px';
-    return;
-  }
-  let text: string = '';
-  for (let i = 0; i < state.singAlong.length; i++) {
-    const byte = state.singAlong[i];
-    text += transWds[byte] || '?';
+      if (index >= 0) {
+        // after the first flg, the text lines are shown
+        for (let i = 0; i < 5; i++) {
+          let line: HTMLSpanElement[];
+          switch (i) {
+            case 1:
+              ({ line } = getTextLine(state.singAlongText[index] || [], colorTable['lblu'].rgba(), transWds, 38));
+              break;
+            case 3:
+              if (index < state.flags.length) {
+                ({ line } = getTextLine(state.singAlongText[index + 1] || [], colorTable['blu'].rgba(), transWds, 38));
+              } else {
+                ({ line } = getTextLine([], colorTable['wht'].rgba(), transWds, 38));
+              }
+              break;
+            default:
+              ({ line } = getTextLine([], colorTable['wht'].rgba(), transWds, 38));
+              break;
+          }
+          textLines[i].append(...line);
+        }
+      } else {
+        // before the first flag the title is shown
+        for (let i = 0; i < 5; i++) {
+          let textLine: HTMLSpanElement[];
+          switch (i) {
+            case 1:
+              // red frame top
+              const topLine = new Array(state.singAlongTitle.length + 2).fill(0xa4 /*bottomline*/);
+              // spaces to center title
+              topLine.unshift(...new Array(Math.floor((38 - state.singAlongTitle.length)/2)).fill(0x20 /*space*/));
+              ({ line: textLine } = getTextLine(topLine, colorTable['red'].rgba(), transWds, 38));
+              break;
+            case 2:
+              let title: number[] = [];
+              if (state.singAlongTitle) {
+                title = state.singAlongTitle.slice();
+                // red frame left
+                title.unshift(0x12 /*reverse on*/, 0x1c /*red*/, 0x20 /*space*/, 0x81 /*orange*/);
+                // red frame right
+                title.push(0x1c /*red*/, 0x20 /*space*/);
+                // spaces to center title
+                title.unshift(...new Array(Math.floor((38 - state.singAlongTitle.length)/2)).fill(0x20));
+              }
+              ({ line: textLine } = getTextLine(title, colorTable['orng'].rgba(), transWds, 38));
+              break;
+            case 3:
+              // red frame bottom
+              const bottomLine = new Array(state.singAlongTitle.length + 2).fill(0xa3 /*topline*/);
+              // spaces to center title
+              bottomLine.unshift(...new Array(Math.floor((38 - state.singAlongTitle.length)/2)).fill(0x20 /*space*/));
+              ({ line: textLine } = getTextLine(bottomLine, colorTable['red'].rgba(), transWds, 38));
+              break;
+            default:
+              ({ line: textLine } = getTextLine([], colorTable['wht'].rgba(), transWds, 38));
+              break;
+          }
+          textLines[i].append(...textLine);
+        }
+      }
+    }
   }
 };
 const updateUiFileSelects = () => {
@@ -600,7 +470,7 @@ const loadSidFile = async (channel: Channel, file: Blob) => {
   pause();
   state.isLoading = true;
   state.isPlaying = false;
-  const { voicesData, duration, text, notes } = await loadFile(channel, file);
+  const { voicesData, duration, text, notes, flags } = await loadFile(channel, file);
   if (channel === 'right') {
     state.durationRight = duration;
     state.voicesDataRight = voicesData;
@@ -612,6 +482,7 @@ const loadSidFile = async (channel: Channel, file: Blob) => {
     state.notes = [notes[0], notes[1], notes[2], state.notes[3], state.notes[4], state.notes[5]];
     state.currentNotes = [-1, -1, -1, state.currentNotes[3], state.currentNotes[4], state.currentNotes[5]];
     state.text = text;
+    state.flags = flags;
   }
   state.startTime = 0;
   state.currentTime = 0;
@@ -620,7 +491,6 @@ const loadSidFile = async (channel: Channel, file: Blob) => {
 };
 
 const loadWdsFile = async (file: Blob) => {
-  // TODO auch andere states setzen?
   const buffer = new DataView(await readFileAsArrayBuffer(file));
   let line: number[] = [];
   const lines: number[][] = [];
@@ -637,7 +507,8 @@ const loadWdsFile = async (file: Blob) => {
         break;
     }
   }
-  state.singAlongTitle = lines[0];
+  // remove apostrophes from beginning and end
+  state.singAlongTitle = lines[0].slice(1, -1);
   state.singAlongText = lines.slice(1);
 };
 
@@ -669,6 +540,10 @@ const clear = () => {
     0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
     0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x0,
   ];
+  state.flags = [];
+  state.currentFlag = -1;
+  state.singAlongTitle = [];
+  state.singAlongText = [];
   state.startTime = 0;
   state.currentTime = 0;
   state.audioContextStartTime = audioContext.currentTime;
