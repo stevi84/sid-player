@@ -34,9 +34,14 @@ const sidRight = new SidClass(audioContext);
 const merger = new ChannelMergerNode(audioContext, { numberOfInputs: 2 });
 sidLeft.connect(audioContext.destination);
 
-export const connectMono = () => {
-  sidLeft.connect(audioContext.destination);
-  sidRight.disconnect();
+export const connectMono = (channel: Channel) => {
+  if (channel === 'right') {
+    sidRight.connect(audioContext.destination);
+    sidLeft.disconnect();
+  } else {
+    sidLeft.connect(audioContext.destination);
+    sidRight.disconnect();
+  }
   merger.disconnect();
 };
 
@@ -712,8 +717,13 @@ export const reloadVoices = (
   voicesData: Command[][],
   startTime: number
 ): { duration: number; notes: NoteViz[][]; flags: Flag[] } => {
+  resetVoices(channel);
+  // logVoices(voicesData);
+  const sid = channel === 'right' ? sidRight : sidLeft;
+  return loadVoices(sid, voicesData, startTime);
+};
+
+export const resetVoices = (channel: Channel) => {
   const sid = channel === 'right' ? sidRight : sidLeft;
   sid.reset(0);
-  // logVoices(voicesData);
-  return loadVoices(sid, voicesData, startTime);
 };

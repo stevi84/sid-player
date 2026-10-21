@@ -1,5 +1,15 @@
 import { colorTable } from './C64CharMap';
-import { audioContext, Channel, connectMono, connectStereo, Flag, loadFile, NoteViz, reloadVoices } from './SidLoad';
+import {
+  audioContext,
+  Channel,
+  connectMono,
+  connectStereo,
+  Flag,
+  loadFile,
+  NoteViz,
+  reloadVoices,
+  resetVoices,
+} from './SidLoad';
 import { Command, readFileAsArrayBuffer, trans, transWds } from './SidParse';
 
 const keyDivs: HTMLDivElement[] = [];
@@ -84,14 +94,11 @@ const handler: ProxyHandler<State> = {
     }
 
     if (['notes'].includes(property)) {
-      if (
-        (target.notes[0].length > 0 || target.notes[1].length > 0 || target.notes[2].length > 0) &&
-        (target.notes[3].length > 0 || target.notes[4].length > 0 || target.notes[5].length > 0)
-      ) {
-        connectStereo();
-      } else {
-        connectMono();
-      }
+      const isLeft = target.notes[0].length > 0 || target.notes[1].length > 0 || target.notes[2].length > 0;
+      const isRight = target.notes[3].length > 0 || target.notes[4].length > 0 || target.notes[5].length > 0;
+      if (!isLeft && isRight) connectMono('right');
+      else if (isLeft && isRight) connectStereo();
+      else connectMono('left');
     }
 
     return true;
@@ -378,7 +385,7 @@ const updateUiText = () => {
       for (let i = 0; i < 5; i++) textLines[i].textContent = '';
       text.classList.remove('text');
       text.classList.add('singAlongText');
-      
+
       let index: number = -1;
       for (let i = 0; i < state.flags.length; i++) {
         if (currentTime >= state.flags[i].start && currentTime < state.flags[i].stop) {
@@ -418,7 +425,7 @@ const updateUiText = () => {
               // red frame top
               const topLine = new Array(state.singAlongTitle.length + 2).fill(0xa4 /*bottomline*/);
               // spaces to center title
-              topLine.unshift(...new Array(Math.floor((38 - state.singAlongTitle.length)/2)).fill(0x20 /*space*/));
+              topLine.unshift(...new Array(Math.floor((38 - state.singAlongTitle.length) / 2)).fill(0x20 /*space*/));
               ({ line: textLine } = getTextLine(topLine, colorTable['red'].rgba(), transWds, 38));
               break;
             case 2:
@@ -430,7 +437,7 @@ const updateUiText = () => {
                 // red frame right
                 title.push(0x1c /*red*/, 0x20 /*space*/);
                 // spaces to center title
-                title.unshift(...new Array(Math.floor((38 - state.singAlongTitle.length)/2)).fill(0x20));
+                title.unshift(...new Array(Math.floor((38 - state.singAlongTitle.length) / 2)).fill(0x20));
               }
               ({ line: textLine } = getTextLine(title, colorTable['orng'].rgba(), transWds, 38));
               break;
@@ -438,7 +445,7 @@ const updateUiText = () => {
               // red frame bottom
               const bottomLine = new Array(state.singAlongTitle.length + 2).fill(0xa3 /*topline*/);
               // spaces to center title
-              bottomLine.unshift(...new Array(Math.floor((38 - state.singAlongTitle.length)/2)).fill(0x20 /*space*/));
+              bottomLine.unshift(...new Array(Math.floor((38 - state.singAlongTitle.length) / 2)).fill(0x20 /*space*/));
               ({ line: textLine } = getTextLine(bottomLine, colorTable['red'].rgba(), transWds, 38));
               break;
             default:
@@ -457,10 +464,11 @@ const updateUiFileSelects = () => {
   !state.openFileValue && (openFileInput.value = state.openFileValue);
 };
 const updateUiPlayArea = () => {
-  playPauseButton.disabled = state.voicesDataLeft.length === 0 || state.isLoading;
+  playPauseButton.disabled =
+    (state.voicesDataLeft.length === 0 && state.voicesDataRight.length === 0) || state.isLoading;
   state.isPlaying ? playPauseButton.classList.add('paused') : playPauseButton.classList.remove('paused');
   currentSpan.textContent = getTimeString(state.currentTime);
-  timeSlider.disabled = state.voicesDataLeft.length === 0 || state.isLoading;
+  timeSlider.disabled = (state.voicesDataLeft.length === 0 && state.voicesDataRight.length === 0) || state.isLoading;
   timeSlider.max = String(getDuration());
   timeSlider.value = String(state.currentTime);
   durationSpan.textContent = getTimeString(getDuration());
@@ -483,6 +491,7 @@ const loadSidFile = async (channel: Channel, file: Blob) => {
     state.currentNotes = [-1, -1, -1, state.currentNotes[3], state.currentNotes[4], state.currentNotes[5]];
     state.text = text;
     state.flags = flags;
+    state.currentFlag = -1;
   }
   state.startTime = 0;
   state.currentTime = 0;
@@ -514,6 +523,8 @@ const loadWdsFile = async (file: Blob) => {
 
 const clear = () => {
   pause();
+  resetVoices('left');
+  resetVoices('right');
   state.isLoading = false;
   state.isPlaying = false;
   state.durationLeft = 0;
@@ -549,29 +560,29 @@ const clear = () => {
   state.audioContextStartTime = audioContext.currentTime;
 };
 
-openFileInput.onchange = (e: Event) => {
-  // @ts-ignore
-  const value: string = e.target.value;
+openFileInput.onchange = async (e: Event) => {
+  const value: string = (e.target as HTMLInputElement).value;
   if (value) {
+    // copy the file list before clear() wipes the input
+    const files: File[] = Array.from((e.target as HTMLInputElement).files || []);
+    clear();
     state.openFileValue = value;
     state.fileSelectValue = '';
-    // @ts-ignore
-    const files: File[] = e.target.files;
     for (const file of files) {
       if (file.name.toLowerCase().endsWith('.mus')) {
-        loadSidFile('left', file);
+        await loadSidFile('left', file);
       } else if (file.name.toLowerCase().endsWith('.str')) {
-        loadSidFile('right', file);
+        await loadSidFile('right', file);
       } else if (file.name.toLowerCase().endsWith('.wds')) {
-        loadWdsFile(file);
+        await loadWdsFile(file);
       }
     }
   }
 };
 fileSelect.onchange = async (e: Event) => {
-  // @ts-ignore
-  const value: string = e.target.value;
+  const value: string = (e.target as HTMLSelectElement).value;
   if (value) {
+    clear();
     state.fileSelectValue = value;
     state.openFileValue = '';
     const fileNames = value.split(',');
@@ -628,17 +639,18 @@ playPauseButton.onclick = () => {
     pause();
     state.isPlaying = false;
   } else {
+    if (state.currentTime >= getDuration()) {
+      reloadSidFiles(0);
+    }
     play();
     state.isPlaying = true;
   }
 };
 
-const reloadSidFiles = (e: MouseEvent | TouchEvent) => {
+const reloadSidFiles = (startTime: number) => {
   state.isLoading = true;
-  // @ts-ignore
-  state.startTime = Number(e.target.value);
-  // @ts-ignore
-  state.currentTime = Number(e.target.value);
+  state.startTime = startTime;
+  state.currentTime = startTime;
   state.audioContextStartTime = audioContext.currentTime;
   state.voicesDataLeft.length > 0 && reloadVoices('left', state.voicesDataLeft, state.startTime);
   state.voicesDataRight.length > 0 && reloadVoices('right', state.voicesDataRight, state.startTime);
@@ -656,18 +668,18 @@ timeSlider.oninput = (e: Event) => {
   state.currentTime = Number(e.target.value);
 };
 timeSlider.onmouseup = (e: MouseEvent) => {
-  reloadSidFiles(e);
+  reloadSidFiles(Number((e.target as HTMLInputElement).value));
   if (state.isPlaying) play();
 };
 timeSlider.ontouchend = (e: TouchEvent) => {
-  reloadSidFiles(e);
+  reloadSidFiles(Number((e.target as HTMLInputElement).value));
   if (state.isPlaying) play();
 };
 
 let updateKeyboardInterval: number | undefined;
 const updateKeyboard = () => {
   state.currentTime = state.startTime + audioContext.currentTime - state.audioContextStartTime;
-  if (state.currentTime > getDuration()) {
+  if (state.currentTime >= getDuration()) {
     pause();
     state.isPlaying = false;
   }
